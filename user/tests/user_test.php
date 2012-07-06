@@ -25,7 +25,7 @@
 
 defined('MOODLE_INTERNAL') || die();
 
-require dirname(__DIR__) . '/lib.php';
+require_once dirname(__DIR__) . '/lib.php';
 
 // To run only this test case: phpunit user_testcase user/tests/user_test.php
 
@@ -53,17 +53,29 @@ class user_testcase extends advanced_testcase {
         );
         $this->loadDataSet($dataset);
 
+        // customfields partly visible
         $user = $DB->get_record('user', array('id' => 3));
         $user_details = user_get_user_details($user);
         $this->assertInternalType('array', $user_details);
         $this->assertArrayHasKey('customfields', $user_details);
-        $this->assertCount(2, $user_details['customfields']);
+        $this->assertCount(1, $user_details['customfields']);
         $this->assertArrayHasKey('name', $user_details['customfields'][0]);
         $this->assertEquals('my text field', $user_details['customfields'][0]['name']);
         $this->assertArrayHasKey('value', $user_details['customfields'][0]);
         $this->assertEquals('my own text 1', $user_details['customfields'][0]['value']);
         unset($user, $user_details);
 
+        // customfields visible
+        $this->setAdminUser();
+        $user = $DB->get_record('user', array('id' => 3));
+        $user_details = user_get_user_details($user);
+        $this->assertCount(2, $user_details['customfields']);
+        $this->assertArrayHasKey('value', $user_details['customfields'][1]);
+        $this->assertEquals('1', $user_details['customfields'][1]['value']);
+        unset($user, $user_details);
+
+        // no customfields
+        $this->setGuestUser();
         $user = $DB->get_record('user', array('id' => 4));
         $user_details = user_get_user_details($user);
         $this->assertInternalType('array', $user_details);
