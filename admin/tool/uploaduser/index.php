@@ -102,14 +102,9 @@ $STD_FIELDS = array_merge($STD_FIELDS, get_all_user_name_fields());
 
 $PRF_FIELDS = array();
 
-if ($proffields = $DB->get_records('user_info_field')) {
-    foreach ($proffields as $key => $proffield) {
-        $profilefieldname = 'profile_field_'.$proffield->shortname;
-        $PRF_FIELDS[] = $profilefieldname;
-        // Re-index $proffields with key as shortname. This will be
-        // used while checking if profile data is key and needs to be converted (eg. menu profile field)
-        $proffields[$profilefieldname] = $proffield;
-        unset($proffields[$key]);
+if ($prof_fields = $DB->get_records('custom_info_field', array('objectname' => 'user'))) {
+    foreach ($prof_fields as $prof_field) {
+        $PRF_FIELDS[] = 'profile_field_'.$prof_field->shortname;
     }
 }
 

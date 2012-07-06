@@ -64,7 +64,8 @@ class user_filter_profilefield extends user_filter_type {
      */
     public function get_profile_fields() {
         global $DB;
-        if (!$fields = $DB->get_records('user_info_field', null, 'shortname', 'id,shortname')) {
+        if (!$fields = $DB->get_records('custom_info_field',
+                array('objectname' => 'user'), 'shortname', 'id,shortname')) {
             return null;
         }
         $res = array(0 => get_string('anyfield', 'filters'));
@@ -193,9 +194,13 @@ class user_filter_profilefield extends user_filter_type {
             $where = "fieldid=$profile $where";
         }
         if ($where !== '') {
-            $where = "WHERE $where";
+            $where = "AND $where";
         }
-        return array("id $op (SELECT userid FROM {user_info_data} $where)", $params);
+
+        return array(
+            "id $op (SELECT objectid FROM {custom_info_data} WHERE objectname = 'user' $where)",
+            $params
+        );
     }
 
     /**
