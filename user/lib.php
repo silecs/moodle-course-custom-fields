@@ -268,9 +268,10 @@ function user_get_user_details($user, $course = null, array $userfields = array(
 
     if (in_array('customfields', $userfields)) {
         $fields = $DB->get_recordset_sql("SELECT f.*
-                                            FROM {user_info_field} f
-                                            JOIN {user_info_category} c
+                                            FROM {custom_info_field} f
+                                            JOIN {custom_info_category} c
                                                  ON f.categoryid=c.id
+                                           WHERE c.objectname = 'user'
                                         ORDER BY c.sortorder ASC, f.sortorder ASC");
         $userdetails['customfields'] = array();
         foreach ($fields as $field) {

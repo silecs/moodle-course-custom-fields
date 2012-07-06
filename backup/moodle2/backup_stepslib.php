@@ -1169,9 +1169,10 @@ class backup_users_structure_step extends backup_structure_step {
         // in an anonymized backup
         if (!$anonymize) {
             $customfield->set_source_sql('SELECT f.id, f.shortname, f.datatype, d.data
-                                            FROM {user_info_field} f
-                                            JOIN {user_info_data} d ON d.fieldid = f.id
-                                           WHERE d.userid = ?', array(backup::VAR_PARENTID));
+                                            FROM {custom_info_field} f
+                                            JOIN {custom_info_data} d ON d.fieldid = f.id
+                                           WHERE d.objectid = ? AND d.objectname = \'user\' ',
+                    array(backup::VAR_PARENTID));
 
             $customfield->set_source_alias('shortname', 'field_name');
             $customfield->set_source_alias('datatype',  'field_type');

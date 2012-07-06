@@ -98,7 +98,7 @@ $STD_FIELDS = array('id', 'firstname', 'lastname', 'username', 'email',
 
 $PRF_FIELDS = array();
 
-if ($prof_fields = $DB->get_records('user_info_field')) {
+if ($prof_fields = $DB->get_records('custom_info_field', array('objectname' => 'user'))) {
     foreach ($prof_fields as $prof_field) {
         $PRF_FIELDS[] = 'profile_field_'.$prof_field->shortname;
     }

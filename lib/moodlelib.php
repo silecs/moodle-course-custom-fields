@@ -3927,8 +3927,8 @@ function delete_user($user) {
     // purge user preferences
     $DB->delete_records('user_preferences', array('userid'=>$user->id));
 
-    // purge user extra profile info
-    $DB->delete_records('user_info_data', array('userid'=>$user->id));
+    // purge user custom profile info
+    $DB->delete_records('custom_info_data', array('objectname' => 'user', 'objectid' => $user->id));
 
     // last course access not necessary either
     $DB->delete_records('user_lastaccess', array('userid'=>$user->id));
