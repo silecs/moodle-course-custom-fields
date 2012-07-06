@@ -3973,7 +3973,7 @@ function delete_user(stdClass $user) {
     $DB->delete_records('user_preferences', array('userid' => $user->id));
 
     // Purge user extra profile info.
-    $DB->delete_records('user_info_data', array('userid' => $user->id));
+    $DB->delete_records('custom_info_data', array('objectname' => 'user', 'objectid' => $user->id));
 
     // Purge log of previous password hashes.
     $DB->delete_records('user_password_history', array('userid' => $user->id));
