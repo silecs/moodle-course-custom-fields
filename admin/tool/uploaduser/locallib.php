@@ -376,7 +376,8 @@ function uu_pre_process_custom_profile_data($data) {
     foreach ($data as $key => $value) {
         if (preg_match('/^profile_field_/', $key)) {
             $shortname = str_replace('profile_field_', '', $key);
-            if ($fields = $DB->get_records('user_info_field', array('shortname' => $shortname))) {
+            if ($fields = $DB->get_records('custom_info_field',
+                    array('objectname' => 'user', 'shortname' => $shortname))) {
                 foreach ($fields as $field) {
                     require_once($CFG->dirroot.'/user/profile/field/'.$field->datatype.'/field.class.php');
                     $newfield = 'profile_field_'.$field->datatype;
@@ -406,7 +407,8 @@ function uu_check_custom_profile_data(&$data) {
     foreach ($data as $key => $value) {
         if (preg_match('/^profile_field_/', $key)) {
             $shortname = str_replace('profile_field_', '', $key);
-            if ($fields = $DB->get_records('user_info_field', array('shortname' => $shortname))) {
+            if ($fields = $DB->get_records('custom_info_field',
+                    array('objectname' => 'user', 'shortname' => $shortname))) {
                 foreach ($fields as $field) {
                     require_once($CFG->dirroot.'/user/profile/field/'.$field->datatype.'/field.class.php');
                     $newfield = 'profile_field_'.$field->datatype;

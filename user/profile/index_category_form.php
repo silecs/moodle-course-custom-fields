@@ -37,11 +37,13 @@ class category_form extends moodleform {
 
         $data  = (object)$data;
 
-        $duplicate = $DB->record_exists('user_info_category', array('name'=>$data->name));
+        $duplicate = $DB->record_exists('custom_info_category',
+                array('objectname' => 'user', 'name' => $data->name));
 
         /// Check the name is unique
         if (!empty($data->id)) { // we are editing an existing record
-            $olddata = $DB->get_record('user_info_category', array('id'=>$data->id));
+            $olddata = $DB->get_record('custom_info_category',
+                    array('objectname' => 'user', 'id' => $data->id));
             // name has changed, new name in use, new name in use by another record
             $dupfound = (($olddata->name !== $data->name) && $duplicate && ($data->id != $duplicate->id));
         }

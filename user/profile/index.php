@@ -48,14 +48,14 @@ switch ($action) {
         $id      = required_param('id', PARAM_INT);
         $confirm = optional_param('confirm', 0, PARAM_BOOL);
 
-        $datacount = $DB->count_records('user_info_data', array('fieldid'=>$id));
+        $datacount = $DB->count_records('custom_info_data', array('fieldid' => $id));
         if (data_submitted() and ($confirm and confirm_sesskey()) or $datacount===0) {
             profile_delete_field($id);
             redirect($redirect,get_string('deleted'));
         }
 
         //ask for confirmation
-        $fieldname = $DB->get_field('user_info_field', 'name', array('id'=>$id));
+        $fieldname = $DB->get_field('custom_info_field', 'name', array('id' => $id));
         $optionsyes = array ('id'=>$id, 'confirm'=>1, 'action'=>'deletefield', 'sesskey'=>sesskey());
         $strheading = get_string('profiledeletefield', 'admin', $fieldname);
         $PAGE->navbar->add($strheading);
@@ -89,16 +89,17 @@ echo $OUTPUT->header();
 echo $OUTPUT->heading(get_string('profilefields', 'admin'));
 
 /// Check that we have at least one category defined
-if ($DB->count_records('user_info_category') == 0) {
+if ($DB->count_records('custom_info_category', array('objectname' => 'user')) == 0) {
     $defaultcategory = new stdClass();
+    $defaultcategory->objectname = 'user';
     $defaultcategory->name = $strdefaultcategory;
     $defaultcategory->sortorder = 1;
-    $DB->insert_record('user_info_category', $defaultcategory);
+    $DB->insert_record('custom_info_category', $defaultcategory);
     redirect($redirect);
 }
 
 /// Show all categories
-$categories = $DB->get_records('user_info_category', null, 'sortorder ASC');
+$categories = $DB->get_records('custom_info_category', array('objectname' => 'user'), 'sortorder ASC');
 
 foreach ($categories as $category) {
     $table = new html_table();
@@ -108,7 +109,7 @@ foreach ($categories as $category) {
     $table->attributes['class'] = 'generaltable profilefield';
     $table->data = array();
 
-    if ($fields = $DB->get_records('user_info_field', array('categoryid'=>$category->id), 'sortorder ASC')) {
+    if ($fields = $DB->get_records('custom_info_field', array('categoryid' => $category->id), 'sortorder ASC')) {
         foreach ($fields as $field) {
             $table->data[] = array(format_string($field->name), profile_field_icons($field));
         }
@@ -164,8 +165,8 @@ function profile_category_icons($category) {
     $strmovedown = get_string('movedown');
     $stredit     = get_string('edit');
 
-    $categorycount = $DB->count_records('user_info_category');
-    $fieldcount    = $DB->count_records('user_info_field', array('categoryid'=>$category->id));
+    $categorycount = $DB->count_records('custom_info_category', array('objectname' => 'user'));
+    $fieldcount    = $DB->count_records('custom_info_field', array('categoryid' => $category->id));
 
     /// Edit
     $editstr = '<a title="'.$stredit.'" href="index.php?id='.$category->id.'&amp;action=editcategory"><img src="'.$OUTPUT->pix_url('t/edit') . '" alt="'.$stredit.'" class="iconsmall" /></a> ';
@@ -209,8 +210,8 @@ function profile_field_icons($field) {
     $strmovedown = get_string('movedown');
     $stredit     = get_string('edit');
 
-    $fieldcount = $DB->count_records('user_info_field', array('categoryid'=>$field->categoryid));
-    $datacount  = $DB->count_records('user_info_data', array('fieldid'=>$field->id));
+    $fieldcount = $DB->count_records('custom_info_field', array('categoryid' => $field->categoryid));
+    $datacount  = $DB->count_records('custom_info_data', array('fieldid' => $field->id));
 
     /// Edit
     $editstr = '<a title="'.$stredit.'" href="index.php?id='.$field->id.'&amp;action=editfield"><img src="'.$OUTPUT->pix_url('t/edit') . '" alt="'.$stredit.'" class="iconsmall" /></a> ';

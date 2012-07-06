@@ -1078,19 +1078,24 @@ abstract class restore_dbops {
                 $newuserctxid = $user->deleted ? 0 : context_user::instance($newuserid)->id;
                 self::set_backup_ids_record($restoreid, 'context', $recuser->parentitemid, $newuserctxid);
 
-                // Process custom fields
+                // Process user custom fields
                 if (isset($user->custom_fields)) { // if present in backup
                     foreach($user->custom_fields['custom_field'] as $udata) {
                         $udata = (object)$udata;
                         // If the profile field has data and the profile shortname-datatype is defined in server
                         if ($udata->field_data) {
-                            if ($field = $DB->get_record('user_info_field', array('shortname'=>$udata->field_name, 'datatype'=>$udata->field_type))) {
-                            /// Insert the user_custom_profile_field
+                            if ($field = $DB->get_record('custom_info_field', array(
+                                'objectname' => 'user',
+                                'shortname' => $udata->field_name,
+                                'datatype'  => $udata->field_type
+                                    ))) {
+                            /// Insert the user custom_info_field
                                 $rec = new stdClass();
-                                $rec->userid  = $newuserid;
+                                $rec->objectname = 'user';
+                                $rec->objectid  = $newuserid;
                                 $rec->fieldid = $field->id;
                                 $rec->data    = $udata->field_data;
-                                $DB->insert_record('user_info_data', $rec);
+                                $DB->insert_record('custom_info_data', $rec);
                             }
                         }
                     }
