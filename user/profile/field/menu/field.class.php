@@ -113,7 +113,7 @@ class profile_field_menu extends profile_field_base {
      *
      * @param stdClass $user User object.
      */
-    public function edit_load_user_data($user) {
+    public function edit_load_object_data($user) {
         $user->{$this->inputname} = $this->datakey;
     }
 
