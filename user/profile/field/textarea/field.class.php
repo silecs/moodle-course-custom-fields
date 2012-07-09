@@ -44,7 +44,7 @@ class profile_field_textarea extends profile_field_base {
      * Overwrite base class method, data in this field type is potentially too large to be included in the user object.
      * @return bool
      */
-    public function is_user_object_data() {
+    public function is_object_data() {
         return false;
     }
 
@@ -66,7 +66,7 @@ class profile_field_textarea extends profile_field_base {
      * Load user data for this profile field, ready for editing.
      * @param stdClass $user
      */
-    public function edit_load_user_data($user) {
+    public function edit_load_object_data($user) {
         if ($this->data !== null) {
             $this->data = clean_text($this->data, $this->dataformat);
             $user->{$this->inputname} = array('text' => $this->data, 'format' => $this->dataformat);
