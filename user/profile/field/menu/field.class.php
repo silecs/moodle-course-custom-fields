@@ -68,7 +68,7 @@ class profile_field_menu extends profile_field_base {
      * Overwrites the base class method
      * @param   object   user object
      */
-    function edit_load_user_data($user) {
+    function edit_load_object_data($user) {
         $user->{$this->inputname} = $this->datakey;
     }
 

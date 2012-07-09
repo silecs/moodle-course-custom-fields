@@ -84,10 +84,6 @@ switch ($action) {
         //normal form
 }
 
-/// Print the header
-echo $OUTPUT->header();
-echo $OUTPUT->heading(get_string('profilefields', 'admin'));
-
 /// Check that we have at least one category defined
 if ($DB->count_records('custom_info_category', array('objectname' => 'user')) == 0) {
     $defaultcategory = new stdClass();
@@ -97,6 +93,10 @@ if ($DB->count_records('custom_info_category', array('objectname' => 'user')) ==
     $DB->insert_record('custom_info_category', $defaultcategory);
     redirect($redirect);
 }
+
+/// Print the header
+echo $OUTPUT->header();
+echo $OUTPUT->heading(get_string('profilefields', 'admin'));
 
 /// Show all categories
 $categories = $DB->get_records('custom_info_category', array('objectname' => 'user'), 'sortorder ASC');
