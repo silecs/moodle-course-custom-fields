@@ -42,12 +42,12 @@ class profile_define_base {
         $form->addElement('selectyesno', 'signup', get_string('profilesignup', 'admin'));
 
         $choices = array();
-        $choices[PROFILE_VISIBLE_NONE]    = get_string('profilevisiblenone', 'admin');
-        $choices[PROFILE_VISIBLE_PRIVATE] = get_string('profilevisibleprivate', 'admin');
-        $choices[PROFILE_VISIBLE_ALL]     = get_string('profilevisibleall', 'admin');
+        $choices[CUSTOMINFO_VISIBLE_NONE]    = get_string('profilevisiblenone', 'admin');
+        $choices[CUSTOMINFO_VISIBLE_PRIVATE] = get_string('profilevisibleprivate', 'admin');
+        $choices[CUSTOMINFO_VISIBLE_ALL]     = get_string('profilevisibleall', 'admin');
         $form->addElement('select', 'visible', get_string('profilevisible', 'admin'), $choices);
         $form->addHelpButton('visible', 'profilevisible', 'admin');
-        $form->setDefault('visible', PROFILE_VISIBLE_ALL);
+        $form->setDefault('visible', CUSTOMINFO_VISIBLE_ALL);
 
         $choices = profile_list_categories();
         $form->addElement('select', 'categoryid', get_string('profilecategory', 'admin'), $choices);

@@ -1,43 +1,15 @@
 <?php
+global $CFG;
 
-/// Some constants
-
-define ('PROFILE_VISIBLE_ALL',     '2'); // only visible for users with moodle/user:update capability
-define ('PROFILE_VISIBLE_PRIVATE', '1'); // either we are viewing our own profile or we have moodle/user:update capability
-define ('PROFILE_VISIBLE_NONE',    '0'); // only visible for moodle/user:update capability
-
-
+require_once($CFG->libdir . '/custominfo/lib.php');
 
 /**
  * Base class for the customisable profile fields.
  */
-class profile_field_base {
+abstract class profile_field_base extends custominfo_field_base {
 
-    /// These 2 variables are really what we're interested in.
-    /// Everything else can be extracted from them
-    var $fieldid;
-    var $userid;
-
-    var $field;
-    var $inputname;
-    var $data;
-    var $dataformat;
-
-    /**
-     * Constructor method.
-     * @param   integer   id of the profile from the custom_info_field table
-     * @param   integer   id of the user for whom we are displaying data
-     */
-    function profile_field_base($fieldid=0, $userid=0) {
-        global $USER;
-
-        $this->set_fieldid($fieldid);
-        $this->set_userid($userid);
-        $this->load_data();
-    }
-
-
-/***** The following methods must be overwritten by child classes *****/
+    protected $objectname = 'user';
+    protected $capability = 'moodle/user:update';
 
     /**
      * Abstract method: Adds the profile field to the moodle form class
@@ -281,6 +253,11 @@ class profile_field_base {
         }
     }
 
+    // for compatibility with PHP4 code in sub-classes
+    public function profile_field_base($fieldid=0, $objectid=0) {
+        parent::__construct($fieldid, $objectid);
+    }
+
     /**
      * Check if the field data is visible to the current user
      * @return  boolean
@@ -289,62 +266,20 @@ class profile_field_base {
         global $USER;
 
         switch ($this->field->visible) {
-            case PROFILE_VISIBLE_ALL:
+            case CUSTOMINFO_VISIBLE_ALL:
                 return true;
-            case PROFILE_VISIBLE_PRIVATE:
-                if ($this->userid == $USER->id) {
+            case CUSTOMINFO_VISIBLE_PRIVATE:
+                if ($this->objectid == $USER->id) {
                     return true;
                 } else {
                     return has_capability('moodle/user:viewalldetails',
-                            context_user::instance($this->userid));
+                            context_user::instance($this->objectid));
                 }
+            case CUSTOMINFO_VISIBLE_NONE:
             default:
-                return has_capability('moodle/user:viewalldetails',
-                        context_user::instance($this->userid));
+                return has_capability($this->capability, context_user::instance($this->objectid));
         }
     }
-
-    /**
-     * Check if the field data is considered empty
-     * return boolean
-     */
-    function is_empty() {
-        return ( ($this->data != '0') and empty($this->data));
-    }
-
-    /**
-     * Check if the field is required on the edit profile page
-     * @return   boolean
-     */
-    function is_required() {
-        return (boolean)$this->field->required;
-    }
-
-    /**
-     * Check if the field is locked on the edit profile page
-     * @return   boolean
-     */
-    function is_locked() {
-        return (boolean)$this->field->locked;
-    }
-
-    /**
-     * Check if the field data should be unique
-     * @return   boolean
-     */
-    function is_unique() {
-        return (boolean)$this->field->forceunique;
-    }
-
-    /**
-     * Check if the field should appear on the signup page
-     * @return   boolean
-     */
-    function is_signup_field() {
-        return (boolean)$this->field->signup;
-    }
-
-
 } /// End of class definition
 
 
@@ -358,7 +293,7 @@ function profile_load_data($user) {
             require_once($CFG->dirroot.'/user/profile/field/'.$field->datatype.'/field.class.php');
             $newfield = 'profile_field_'.$field->datatype;
             $formfield = new $newfield($field->id, $user->id);
-            $formfield->edit_load_user_data($user);
+            $formfield->edit_load_object_data($user);
         }
     }
 }
@@ -382,7 +317,7 @@ function profile_definition($mform, $userid = 0) {
                 // check first if *any* fields will be displayed
                 $display = false;
                 foreach ($fields as $field) {
-                    if ($field->visible != PROFILE_VISIBLE_NONE) {
+                    if ($field->visible != CUSTOMINFO_VISIBLE_NONE) {
                         $display = true;
                     }
                 }
@@ -511,7 +446,7 @@ function profile_user_record($userid) {
             require_once($CFG->dirroot.'/user/profile/field/'.$field->datatype.'/field.class.php');
             $newfield = 'profile_field_'.$field->datatype;
             $formfield = new $newfield($field->id, $userid);
-            if ($formfield->is_user_object_data()) {
+            if ($formfield->is_object_data()) {
                 $usercustomfields->{$field->shortname} = $formfield->data;
             }
         }
