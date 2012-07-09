@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="UTF-8" ?>
-<XMLDB PATH="lib/db" VERSION="20120620" COMMENT="XMLDB file for core Moodle tables"
+<XMLDB PATH="lib/db" VERSION="20120705" COMMENT="XMLDB file for core Moodle tables"
     xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
     xsi:noNamespaceSchemaLocation="../../lib/xmldb/xmldb.xsd"
 >
@@ -1189,7 +1189,7 @@
         <INDEX NAME="userid-roleid-contextid" UNIQUE="true" FIELDS="userid, roleid, contextid"/>
       </INDEXES>
     </TABLE>
-    <TABLE NAME="role_context_levels" COMMENT="Lists which roles can be assigned at which context levels. The assignment is allowed in the corresponding row is present in this table." PREVIOUS="role_sortorder" NEXT="user_info_field">
+    <TABLE NAME="role_context_levels" COMMENT="Lists which roles can be assigned at which context levels. The assignment is allowed in the corresponding row is present in this table." PREVIOUS="role_sortorder" NEXT="custom_info_field">
       <FIELDS>
         <FIELD NAME="id" TYPE="int" LENGTH="10" NOTNULL="true" SEQUENCE="true" NEXT="roleid"/>
         <FIELD NAME="roleid" TYPE="int" LENGTH="10" NOTNULL="true" SEQUENCE="false" PREVIOUS="id" NEXT="contextlevel"/>
@@ -1201,10 +1201,11 @@
         <KEY NAME="roleid" TYPE="foreign" FIELDS="roleid" REFTABLE="role" REFFIELDS="id" PREVIOUS="contextlevel-roleid"/>
       </KEYS>
     </TABLE>
-    <TABLE NAME="user_info_field" COMMENT="Customisable user profile fields" PREVIOUS="role_context_levels" NEXT="user_info_category">
+    <TABLE NAME="custom_info_field" COMMENT="Customisable fields for users and courses" PREVIOUS="role_context_levels" NEXT="custom_info_category">
       <FIELDS>
-        <FIELD NAME="id" TYPE="int" LENGTH="10" NOTNULL="true" SEQUENCE="true" NEXT="shortname"/>
-        <FIELD NAME="shortname" TYPE="char" LENGTH="255" NOTNULL="true" DEFAULT="shortname" SEQUENCE="false" COMMENT="short name for each field" PREVIOUS="id" NEXT="name"/>
+        <FIELD NAME="id" TYPE="int" LENGTH="10" NOTNULL="true" SEQUENCE="true" NEXT="objectname"/>
+        <FIELD NAME="objectname" TYPE="char" LENGTH="255" NOTNULL="true" DEFAULT="user" SEQUENCE="false" COMMENT="Name of the object (table name). For data that was in user_info_table, objectname='user'" PREVIOUS="id" NEXT="shortname"/>
+        <FIELD NAME="shortname" TYPE="char" LENGTH="255" NOTNULL="true" DEFAULT="shortname" SEQUENCE="false" COMMENT="short name for each field" PREVIOUS="objectname" NEXT="name"/>
         <FIELD NAME="name" TYPE="text" NOTNULL="true" SEQUENCE="false" COMMENT="field name" PREVIOUS="shortname" NEXT="datatype"/>
         <FIELD NAME="datatype" TYPE="char" LENGTH="255" NOTNULL="true" SEQUENCE="false" COMMENT="Type of data held in this field" PREVIOUS="name" NEXT="description"/>
         <FIELD NAME="description" TYPE="text" NOTNULL="false" SEQUENCE="false" COMMENT="Description of field" PREVIOUS="datatype" NEXT="descriptionformat"/>
@@ -1228,21 +1229,23 @@
         <KEY NAME="primary" TYPE="primary" FIELDS="id"/>
       </KEYS>
     </TABLE>
-    <TABLE NAME="user_info_category" COMMENT="Customisable fields categories" PREVIOUS="user_info_field" NEXT="user_info_data">
+    <TABLE NAME="custom_info_category" COMMENT="Customisable fields categories" PREVIOUS="custom_info_field" NEXT="custom_info_data">
       <FIELDS>
-        <FIELD NAME="id" TYPE="int" LENGTH="10" NOTNULL="true" SEQUENCE="true" NEXT="name"/>
-        <FIELD NAME="name" TYPE="char" LENGTH="255" NOTNULL="true" SEQUENCE="false" COMMENT="Category name" PREVIOUS="id" NEXT="sortorder"/>
+        <FIELD NAME="id" TYPE="int" LENGTH="10" NOTNULL="true" SEQUENCE="true" NEXT="objectname"/>
+        <FIELD NAME="objectname" TYPE="char" LENGTH="255" NOTNULL="true" DEFAULT="user" SEQUENCE="false" PREVIOUS="id" NEXT="name"/>
+        <FIELD NAME="name" TYPE="char" LENGTH="255" NOTNULL="true" SEQUENCE="false" COMMENT="Category name" PREVIOUS="objectname" NEXT="sortorder"/>
         <FIELD NAME="sortorder" TYPE="int" LENGTH="10" NOTNULL="true" DEFAULT="0" SEQUENCE="false" COMMENT="Display order" PREVIOUS="name"/>
       </FIELDS>
       <KEYS>
         <KEY NAME="primary" TYPE="primary" FIELDS="id"/>
       </KEYS>
     </TABLE>
-    <TABLE NAME="user_info_data" COMMENT="Data for the customisable user fields" PREVIOUS="user_info_category" NEXT="question_categories">
+    <TABLE NAME="custom_info_data" COMMENT="Data for the customisable fields" PREVIOUS="custom_info_category" NEXT="question_categories">
       <FIELDS>
-        <FIELD NAME="id" TYPE="int" LENGTH="10" NOTNULL="true" SEQUENCE="true" NEXT="userid"/>
-        <FIELD NAME="userid" TYPE="int" LENGTH="10" NOTNULL="true" DEFAULT="0" SEQUENCE="false" COMMENT="id from the user table" PREVIOUS="id" NEXT="fieldid"/>
-        <FIELD NAME="fieldid" TYPE="int" LENGTH="10" NOTNULL="true" DEFAULT="0" SEQUENCE="false" COMMENT="id from the field table" PREVIOUS="userid" NEXT="data"/>
+        <FIELD NAME="id" TYPE="int" LENGTH="10" NOTNULL="true" SEQUENCE="true" NEXT="objectname"/>
+        <FIELD NAME="objectname" TYPE="char" LENGTH="255" NOTNULL="true" DEFAULT="user" SEQUENCE="false" PREVIOUS="id" NEXT="objectid"/>
+        <FIELD NAME="objectid" TYPE="int" LENGTH="10" NOTNULL="true" DEFAULT="0" SEQUENCE="false" COMMENT="id from the table that has custom fields" PREVIOUS="objectname" NEXT="fieldid"/>
+        <FIELD NAME="fieldid" TYPE="int" LENGTH="10" NOTNULL="true" DEFAULT="0" SEQUENCE="false" COMMENT="id from the field table" PREVIOUS="objectid" NEXT="data"/>
         <FIELD NAME="data" TYPE="text" NOTNULL="true" SEQUENCE="false" COMMENT="Field data" PREVIOUS="fieldid" NEXT="dataformat"/>
         <FIELD NAME="dataformat" TYPE="int" LENGTH="2" NOTNULL="true" DEFAULT="0" SEQUENCE="false" PREVIOUS="data"/>
       </FIELDS>
@@ -1250,10 +1253,10 @@
         <KEY NAME="primary" TYPE="primary" FIELDS="id"/>
       </KEYS>
       <INDEXES>
-        <INDEX NAME="userfieldidx" UNIQUE="false" FIELDS="userid, fieldid"/>
+        <INDEX NAME="objectfieldidx" UNIQUE="false" FIELDS="objectid, fieldid" COMMENT="Composite key"/>
       </INDEXES>
     </TABLE>
-    <TABLE NAME="question_categories" COMMENT="Categories are for grouping questions" PREVIOUS="user_info_data" NEXT="question">
+    <TABLE NAME="question_categories" COMMENT="Categories are for grouping questions" PREVIOUS="custom_info_data" NEXT="question">
       <FIELDS>
         <FIELD NAME="id" TYPE="int" LENGTH="10" NOTNULL="true" SEQUENCE="true" NEXT="name"/>
         <FIELD NAME="name" TYPE="char" LENGTH="255" NOTNULL="true" SEQUENCE="false" PREVIOUS="id" NEXT="contextid"/>

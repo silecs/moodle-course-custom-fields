@@ -875,6 +875,57 @@ function xmldb_main_upgrade($oldversion) {
     // Moodle v2.3.0 release upgrade line
     // Put any upgrade step following this
 
+    if ($oldversion < 2012062500.02) {
+        $table = new xmldb_table('user_info_data');
+        // Drop index userfieldidx
+        $index = new xmldb_index('userfieldidx', XMLDB_INDEX_NOTUNIQUE, array('userid', 'fieldid'));
+        if ($dbman->index_exists($table, $index)) {
+            $dbman->drop_index($table, $index);
+        }
+        // Rename field userid to objectid
+        $field = new xmldb_field('userid', XMLDB_TYPE_INTEGER, '10', null, XMLDB_NOTNULL, null, '0', 'id');
+        $dbman->rename_field($table, $field, 'objectid');
+        // Conditionally launch add field objectname
+        $field = new xmldb_field('objectname', XMLDB_TYPE_CHAR, '255', null, XMLDB_NOTNULL, null, 'user', 'id');
+        if (!$dbman->field_exists($table, $field)) {
+            $dbman->add_field($table, $field);
+        }
+        // Define index objectfieldidx (not unique) to be added to custom_info_data
+        $index = new xmldb_index('objectfieldidx', XMLDB_INDEX_NOTUNIQUE, array('objectid', 'objectname', 'fieldid'));
+        if (!$dbman->index_exists($table, $index)) {
+            $dbman->add_index($table, $index);
+        }
+        // Launch rename table for custom_info_data
+        $dbman->rename_table($table, 'custom_info_data');
+        unset($table);
+        unset($field);
+
+        // Define table user_info_field to be renamed to custom_info_field
+        $table = new xmldb_table('user_info_field');
+        // Conditionally launch add field objectname
+        $field = new xmldb_field('objectname', XMLDB_TYPE_CHAR, '255', null, XMLDB_NOTNULL, null, 'user', 'id');
+        if (!$dbman->field_exists($table, $field)) {
+            $dbman->add_field($table, $field);
+        }
+        // Launch rename table for custom_info_field
+        $dbman->rename_table($table, 'custom_info_field');
+        unset($table);
+        unset($field);
+
+        $table = new xmldb_table('user_info_category');
+        // Conditionally launch add field objectname
+        $field = new xmldb_field('objectname', XMLDB_TYPE_CHAR, '255', null, XMLDB_NOTNULL, null, 'user', 'id');
+        if (!$dbman->field_exists($table, $field)) {
+            $dbman->add_field($table, $field);
+        }
+        // Launch rename table for custom_info_category
+        $dbman->rename_table($table, 'custom_info_category');
+        unset($table);
+        unset($field);
+
+        // Main savepoint reached
+        upgrade_main_savepoint(true, 2012062500.02);
+    }
 
     if ($oldversion < 2012062500.02) {
         // Drop some old backup tables, not used anymore
