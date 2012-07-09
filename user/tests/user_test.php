@@ -46,9 +46,9 @@ class user_testcase extends advanced_testcase {
         $dataset = $this->createCsvDataSet(
             array(
                 'user' => __DIR__ . '/fixtures/user_dataset.csv',
-                'user_info_category' => __DIR__ . '/fixtures/info_category_dataset.csv',
-                'user_info_field' => __DIR__ . '/fixtures/info_field_dataset.csv',
-                'user_info_data' => __DIR__ . '/fixtures/info_data_dataset.csv',
+                'custom_info_category' => __DIR__ . '/fixtures/info_category_dataset.csv',
+                'custom_info_field' => __DIR__ . '/fixtures/info_field_dataset.csv',
+                'custom_info_data' => __DIR__ . '/fixtures/info_data_dataset.csv',
             )
         );
         $this->loadDataSet($dataset);
