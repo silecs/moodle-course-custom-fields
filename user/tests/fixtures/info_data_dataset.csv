@@ -1,3 +1,4 @@
 objectname,objectid,fieldid,data,dataformat
 user,3,1,"my own text 1",2
 user,3,2,"1",2
+user,4,1,"my own text 2",2

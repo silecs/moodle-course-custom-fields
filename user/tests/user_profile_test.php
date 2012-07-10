@@ -123,4 +123,28 @@ class user_profile_testcase extends advanced_testcase {
         $this->setExpectedException('moodle_exception', 'Incorrect category id!', 0);
         $this->assertFalse(profile_delete_category(1));
     }
+
+    public function test_profile_move_field() {
+        global $DB;
+        $this->resetAfterTest(true);
+        $this->initDb();
+        $this->assertEquals('1', $DB->get_field('custom_info_field', 'sortorder', array('id' => 1)));
+        $this->assertTrue(profile_move_field(1, 'down'));
+        $this->assertEquals('2', $DB->get_field('custom_info_field', 'sortorder', array('id' => 1)));
+        $this->assertEquals('1', $DB->get_field('custom_info_field', 'sortorder', array('id' => 2)));
+        $this->assertFalse(profile_move_field(1, 'down'));
+        $this->assertTrue(profile_move_field(1, 'up'));
+        $this->assertEquals('1', $DB->get_field('custom_info_field', 'sortorder', array('id' => 1)));
+        $this->assertEquals('2', $DB->get_field('custom_info_field', 'sortorder', array('id' => 2)));
+    }
+
+    public function test_profile_delete_field() {
+        global $DB;
+        $this->resetAfterTest(true);
+        $this->initDb();
+        $this->assertEquals(2, $DB->count_records('custom_info_data', array('fieldid' => 1)));
+        $this->assertTrue(profile_delete_field(1));
+        $this->assertEquals(0, $DB->count_records('custom_info_field', array('id' => 1)));
+        $this->assertEquals(0, $DB->count_records('custom_info_data', array('fieldid' => 1)));
+    }
 }

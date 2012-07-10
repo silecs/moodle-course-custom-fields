@@ -76,7 +76,7 @@ class user_testcase extends advanced_testcase {
 
         // no customfields
         $this->setGuestUser();
-        $user = $DB->get_record('user', array('id' => 4));
+        $user = $DB->get_record('user', array('id' => 2));
         $user_details = user_get_user_details($user);
         $this->assertInternalType('array', $user_details);
         $this->assertfalse(isset($user_details['customfields']));
