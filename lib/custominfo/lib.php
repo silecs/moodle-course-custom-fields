@@ -241,7 +241,7 @@ abstract class custominfo_field_base {
     }
 
     /**
-     * Accessor method: Load the field record and user data associated with the object's fieldid and objectid
+     * Accessor method: Load the field record and the data associated with the object's fieldid and objectid
      */
     function load_data() {
         global $DB;
@@ -315,5 +315,194 @@ abstract class custominfo_field_base {
         return (boolean)$this->field->signup;
     }
 
-
 } /// End of class definition
+
+
+class custominfo_category {
+    protected $objectname;
+    protected $id;
+
+    protected $record;
+
+    public function __construct($objectname, $id=null) {
+        $this->objectname = $objectname;
+        $this->set_id($id);
+    }
+
+    /**
+     * Builds a new instance not linked to a soecific category.
+     * @param string $objectname
+     * @return custominfo_category new instance
+     */
+    public static function type($objectname) {
+        return new custominfo_category($objectname);
+    }
+
+    /**
+     * Builds a new instance from a category ID.
+     * @param integer $id category ID
+     * @return custominfo_category new instance
+     */
+    public static function findById($id) {
+        global $DB;
+        $record = $DB->get_record('custom_info_category', array('id' => $id));
+        if (!$record) {
+            print_error('invalidcategoryid');
+        }
+        $c = new custominfo_category($record->objectname);
+        $c->set_record($record);
+        return $c;
+    }
+
+    /**
+     * Accessor method: set the category id
+     * @param integer $id  id from the category table
+     */
+    function set_id($id) {
+        global $DB;
+        $this->id = $id;
+        if (isset($id)) {
+            $this->record = $DB->get_record('custom_info_category', array('id' => $id));
+            if (!$this->record || $this->record->objectname != $this->objectname) {
+                print_error('invalidcategoryid');
+            }
+        }
+    }
+
+    /**
+     * Accessor method: set the category record (and id)
+     * @param object $record  record from the category table
+     */
+    function set_record($record) {
+        if (empty($record->id) || empty($record->name) || empty($record->objectname) || $record->objectname != $this->objectname) {
+            print_error('invalidcategoryid');
+        }
+        $this->id = $record->id;
+        $this->record = $record;
+    }
+
+    /**
+     * Change the sortorder of the category
+     * @param   string  $dir  direction of move: "up" or "down"
+     * @return  boolean       success of operation
+     */
+    public function move($dir) {
+        global $DB;
+
+        if (!$this->record) {
+            return false;
+        }
+
+        /// Count the number of categories
+        $categorycount = $DB->count_records('custom_info_category', array('objectname' => $this->objectname));
+
+        /// Calculate the new sortorder
+        if (($dir == 'up') and ($this->record->sortorder > 1)) {
+            $neworder = $this->record->sortorder - 1;
+        } elseif (($dir == 'down') and ($this->record->sortorder < $categorycount)) {
+            $neworder = $this->record->sortorder + 1;
+        } else {
+            return false;
+        }
+
+        /// Retrieve the category object that is currently residing in the new position
+        $swapcategory = $DB->get_record('custom_info_category',
+                array('objectname' => $this->objectname, 'sortorder' => $neworder),'id, sortorder');
+        if ($swapcategory) {
+            /// Swap the sortorders
+            $swapcategory->sortorder = $this->record->sortorder;
+            $this->record->sortorder = $neworder;
+
+            /// Update the category records
+            $DB->update_record('custom_info_category', $this->record)
+                    and $DB->update_record('custom_info_category', $swapcategory);
+            return true;
+        }
+
+        return false;
+    }
+
+    /**
+     * Delete a custominfo category
+     * @return  boolean   success of operation
+     */
+    public function delete() {
+        global $DB;
+
+        if (!$this->record) {
+            print_error('invalidcategoryid');
+        }
+
+        $categories = $DB->get_records('custom_info_category', array('objectname' => $this->objectname), 'sortorder ASC');
+        if (!$categories) {
+            print_error('nocate', 'debug');
+        }
+
+        unset($categories[$this->record->id]);
+
+        if (!count($categories)) {
+            return; //we can not delete the last category
+        }
+
+        /// Does the category contain any fields
+        if ($DB->count_records('custom_info_field', array('categoryid' => $this->record->id))) {
+            if (array_key_exists($this->record->sortorder-1, $categories)) {
+                $newcategory = $categories[$this->record->sortorder-1];
+            } else if (array_key_exists($this->record->sortorder+1, $categories)) {
+                $newcategory = $categories[$this->record->sortorder+1];
+            } else {
+                $newcategory = reset($categories); // get first category if sortorder broken
+            }
+
+            $fields = $DB->get_records('custom_info_field', array('categoryid' => $this->record->id), 'sortorder ASC');
+            if ($fields) {
+                $sortorder = $DB->count_records('custom_info_field', array('categoryid' => $newcategory->id)) + 1;
+                foreach ($fields as $field) {
+                    $f = new stdClass();
+                    $f->id = $field->id;
+                    $f->sortorder = $sortorder++;
+                    $f->categoryid = $newcategory->id;
+                    $DB->update_record('custom_info_field', $f);
+                }
+            }
+        }
+
+        /// Finally we get to delete the category
+        $DB->delete_records('custom_info_category', array('objectname' => $this->objectname, 'id' => $this->record->id));
+        profile_reorder_categories();
+        return true;
+    }
+
+    /**
+     * Retrieve a list of categories as an array(id => name) suitable for use in a form
+     * @return   array
+     */
+    public function list_assoc() {
+        global $DB;
+        $categories = $DB->get_records_menu(
+                'custom_info_category', array('objectname' => $this->objectname), 'sortorder ASC', 'id, name'
+        );
+        if (!$categories) {
+            $categories = array();
+        }
+        return $categories;
+    }
+
+    /**
+     * Reorder the profile categories starting at the category
+     */
+    public function reorder() {
+        global $DB;
+
+        $categories = $DB->get_records('custom_info_category', array('objectname' => $this->objectname), 'sortorder ASC');
+        if ($categories) {
+            $sortorder = 1;
+            foreach ($categories as $cat) {
+                $c = new stdClass();
+                $c->id = $cat->id;
+                $c->sortorder = $sortorder++;
+                $DB->update_record('custom_info_category', $c);
+            }
+        }
+    }
+}
