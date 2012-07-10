@@ -269,7 +269,7 @@ function profile_list_categories() {
 }
 
 
-/// Are we adding or editing a cateogory?
+/// Are we adding or editing a category?
 function profile_edit_category($id, $redirect) {
     global $OUTPUT;
     $category = custominfo_category::type('user');
@@ -298,91 +298,30 @@ function profile_edit_category($id, $redirect) {
 function profile_edit_field($id, $datatype, $redirect) {
     global $CFG, $DB, $OUTPUT, $PAGE;
 
-    if (!$field = $DB->get_record('custom_info_field', array('id'=>$id))) {
-        $field = new stdClass();
-        $field->objectname = 'user';
-        $field->datatype = $datatype;
-        $field->description = '';
-        $field->descriptionformat = FORMAT_HTML;
-        $field->defaultdata = '';
-        $field->defaultdataformat = FORMAT_HTML;
+    $field = custominfo_field::type('user');
+    if ($id) {
+        $field->set_id($id);
     }
-
-
-    // Clean and prepare description for the editor
-    $field->description = clean_text($field->description, $field->descriptionformat);
-    $field->description = array('text'=>$field->description, 'format'=>$field->descriptionformat, 'itemid'=>0);
-
-    require_once('index_field_form.php');
-    $fieldform = new field_form(null, $field->datatype);
-
-    // Convert the data format for
-    if (is_array($fieldform->editors())) {
-        foreach ($fieldform->editors() as $editor) {
-            if (isset($field->$editor)) {
-                $field->$editor = clean_text($field->$editor, $field->{$editor.'format'});
-                $field->$editor = array('text'=>$field->$editor, 'format'=>$field->{$editor.'format'}, 'itemid'=>0);
-            }
-        }
-    }
-
-    $fieldform->set_data($field);
-
-    if ($fieldform->is_cancelled()) {
-        redirect($redirect);
-
-    } else {
-        if ($data = $fieldform->get_data()) {
-            require_once($CFG->dirroot.'/user/profile/field/'.$datatype.'/define.class.php');
-            $newfield = 'profile_define_'.$datatype;
-            $formfield = new $newfield();
-            $data->objectname = 'user'; // custom_info objectname
-
-            // Collect the description and format back into the proper data structure from the editor
-            // Note: This field will ALWAYS be an editor
-            $data->descriptionformat = $data->description['format'];
-            $data->description = $data->description['text'];
-
-            // Check whether the default data is an editor, this is (currently) only the
-            // textarea field type
-            if (is_array($data->defaultdata) && array_key_exists('text', $data->defaultdata)) {
-                // Collect the default data and format back into the proper data structure from the editor
-                $data->defaultdataformat = $data->defaultdata['format'];
-                $data->defaultdata = $data->defaultdata['text'];
-            }
-
-            // Convert the data format for
-            if (is_array($fieldform->editors())) {
-                foreach ($fieldform->editors() as $editor) {
-                    if (isset($field->$editor)) {
-                        $field->{$editor.'format'} = $field->{$editor}['format'];
-                        $field->$editor = $field->{$editor}['text'];
-                    }
-                }
-            }
-
-            $formfield->define_save($data);
-            profile_reorder_fields();
-            profile_reorder_categories();
+    switch ($field->edit($datatype)) {
+        case custominfo_category::EDIT_CANCELLED:
+        case custominfo_category::EDIT_SAVED:
             redirect($redirect);
-        }
+        case custominfo_category::EDIT_DISPLAY:
 
         $datatypes = profile_list_datatypes();
 
         if (empty($id)) {
             $strheading = get_string('profilecreatenewfield', 'admin', $datatypes[$datatype]);
         } else {
-            $strheading = get_string('profileeditfield', 'admin', $field->name);
+            $strheading = get_string('profileeditfield', 'admin', $field->get_record()->name);
         }
 
         /// Print the page
         $PAGE->navbar->add($strheading);
         echo $OUTPUT->header();
         echo $OUTPUT->heading($strheading);
-        $fieldform->display();
+        $field->get_form()->display();
         echo $OUTPUT->footer();
         die;
     }
 }
-
-
