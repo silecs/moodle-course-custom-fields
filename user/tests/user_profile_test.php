@@ -26,6 +26,7 @@
 defined('MOODLE_INTERNAL') || die();
 
 require_once dirname(__DIR__) . '/profile/lib.php';
+require_once dirname(__DIR__) . '/profile/definelib.php';
 require_once dirname(__DIR__) . '/profile/field/text/field.class.php';
 require_once dirname(__DIR__) . '/profile/field/checkbox/field.class.php';
 
@@ -40,6 +41,9 @@ require_once dirname(__DIR__) . '/profile/field/checkbox/field.class.php';
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 class user_profile_testcase extends advanced_testcase {
+    public function setUp() {
+    }
+
     public function test_text_empty() {
         $formfield = new profile_field_text();
         $this->assertInstanceOf('profile_field_base', $formfield);
@@ -55,10 +59,7 @@ class user_profile_testcase extends advanced_testcase {
     }
 
     public function test_text_and_checkbox() {
-        global $DB;
-
-        $this->resetAfterTest(true);          // reset all changes automatically after this test
-
+        $this->resetAfterTest(false);
         $dataset = $this->createCsvDataSet(
             array(
                 'user' => __DIR__ . '/fixtures/user_dataset.csv',
@@ -84,5 +85,34 @@ class user_profile_testcase extends advanced_testcase {
         $this->assertRegExp('/<input\b.*\btype="checkbox"/', $formfield->display_data());
         $this->assertNotEmpty($formfield->inputname);
         $this->assertFalse($formfield->is_visible());
+    }
+
+    public function test_profile_list_categories() {
+        $this->resetAfterTest(false);
+        $expected = array("1" => "maincategory", "3" => "second category", "2" => "third category");
+        $this->assertEquals($expected, profile_list_categories());
+    }
+
+    public function test_profile_move_category() {
+        $this->resetAfterTest(false);
+        $this->assertTrue(profile_move_category(3, 'down'));
+        $expected = array("1" => "maincategory", "2" => "third category", "3" => "second category");
+        $this->assertEquals($expected, profile_list_categories());
+        $this->assertFalse(profile_move_category(3, 'down'));
+        $this->assertTrue(profile_move_category(2, 'up'));
+        $expected = array("2" => "third category", "1" => "maincategory", "3" => "second category");
+        $this->assertEquals($expected, profile_list_categories());
+    }
+
+    public function test_profile_delete_category() {
+        $this->resetAfterTest(true);
+        $expected = array("1" => "maincategory", "3" => "second category", "2" => "third category");
+        $this->assertEquals($expected, profile_list_categories());
+        $this->assertTrue(profile_delete_category(1));
+        $expected = array("3" => "second category", "2" => "third category");
+        $this->assertEquals($expected, profile_list_categories());
+
+        $this->setExpectedException('moodle_exception', 'Incorrect category id!', 0);
+        $this->assertFalse(profile_delete_category(1));
     }
 }

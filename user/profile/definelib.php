@@ -1,5 +1,7 @@
 <?php
 
+require_once($CFG->libdir . '/custominfo/lib.php');
+
 class profile_define_base {
 
     /**
@@ -218,17 +220,7 @@ function profile_reorder_fields() {
  * at the given startorder
  */
 function profile_reorder_categories() {
-    global $DB;
-
-    $i = 1;
-    if ($categories = $DB->get_records('custom_info_category', array('objectname' => 'user'), 'sortorder ASC')) {
-        foreach ($categories as $cat) {
-            $c = new stdClass();
-            $c->id = $cat->id;
-            $c->sortorder = $i++;
-            $DB->update_record('custom_info_category', $c);
-        }
-    }
+    return custominfo_category::type('user')->reorder();
 }
 
 /**
@@ -237,52 +229,7 @@ function profile_reorder_categories() {
  * @return  boolean   success of operation
  */
 function profile_delete_category($id) {
-    global $DB;
-
-    /// Retrieve the category
-    if (!$category = $DB->get_record('custom_info_category', array('id' => $id))) {
-        print_error('invalidcategoryid');
-    }
-
-    if (!$categories = $DB->get_records('custom_info_category',
-            array('objectname' => 'user'), 'sortorder ASC')) {
-        print_error('nocate', 'debug');
-    }
-
-    unset($categories[$category->id]);
-
-    if (!count($categories)) {
-        return; //we can not delete the last category
-    }
-
-    /// Does the category contain any fields
-    if ($DB->count_records('custom_info_field', array('categoryid'=>$category->id))) {
-        if (array_key_exists($category->sortorder-1, $categories)) {
-            $newcategory = $categories[$category->sortorder-1];
-        } else if (array_key_exists($category->sortorder+1, $categories)) {
-            $newcategory = $categories[$category->sortorder+1];
-        } else {
-            $newcategory = reset($categories); // get first category if sortorder broken
-        }
-
-        $sortorder = $DB->count_records('custom_info_field', array('categoryid' => $newcategory->id)) + 1;
-
-        if ($fields = $DB->get_records('custom_info_field', array('categoryid' => $category->id), 'sortorder ASC')) {
-            foreach ($fields as $field) {
-                $f = new stdClass();
-                $f->id = $field->id;
-                $f->sortorder = $sortorder++;
-                $f->categoryid = $newcategory->id;
-                $DB->update_record('custom_info_field', $f);
-                //echo "<pre>";var_dump($f);echo"</pre>";
-            }
-        }
-    }
-
-    /// Finally we get to delete the category
-    $DB->delete_records('custom_info_category', array('objectname' => 'user', 'id' => $category->id));
-    profile_reorder_categories();
-    return true;
+    return custominfo_category::findById($id)->delete();
 }
 
 
@@ -349,39 +296,7 @@ function profile_move_field($id, $move) {
  * @return  boolean   success of operation
  */
 function profile_move_category($id, $move) {
-    global $DB;
-    /// Get the category object
-    if (!($category = $DB->get_record('custom_info_category', array('id'=>$id), 'id, sortorder'))) {
-        return false;
-    }
-
-    /// Count the number of categories
-    $categorycount = $DB->count_records('custom_info_category', array('objectname' => 'user'));
-
-    /// Calculate the new sortorder
-    if ( ($move == 'up') and ($category->sortorder > 1)) {
-        $neworder = $category->sortorder - 1;
-    } elseif ( ($move == 'down') and ($category->sortorder < $categorycount)) {
-        $neworder = $category->sortorder + 1;
-    } else {
-        return false;
-    }
-
-    /// Retrieve the category object that is currently residing in the new position
-    if ($swapcategory = $DB->get_record('custom_info_category',
-            array('objectname' => 'user', 'sortorder' => $neworder),'id, sortorder')) {
-
-        /// Swap the sortorders
-        $swapcategory->sortorder = $category->sortorder;
-        $category->sortorder     = $neworder;
-
-        /// Update the category records
-        $DB->update_record('custom_info_category', $category)
-                and $DB->update_record('custom_info_category', $swapcategory);
-        return true;
-    }
-
-    return false;
+    return custominfo_category::findById($id)->move($move);
 }
 
 /**
@@ -407,12 +322,7 @@ function profile_list_datatypes() {
  * @return   array
  */
 function profile_list_categories() {
-    global $DB;
-    if (!$categories = $DB->get_records_menu('custom_info_category',
-            array('objectname' => 'user'), 'sortorder ASC', 'id, name')) {
-        $categories = array();
-    }
-    return $categories;
+    return custominfo_category::type('user')->list_assoc();
 }
 
 
