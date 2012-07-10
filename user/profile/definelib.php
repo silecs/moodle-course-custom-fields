@@ -296,7 +296,7 @@ function profile_edit_category($id, $redirect) {
 }
 
 function profile_edit_field($id, $datatype, $redirect) {
-    global $CFG, $DB, $OUTPUT, $PAGE;
+    global $OUTPUT, $PAGE;
 
     $field = custominfo_field::type('user');
     if ($id) {

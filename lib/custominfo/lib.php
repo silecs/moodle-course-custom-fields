@@ -4,7 +4,7 @@
 
 define ('CUSTOMINFO_VISIBLE_ALL',     '2'); // visible for all users
 define ('CUSTOMINFO_VISIBLE_PRIVATE', '1'); // either it's our own profile or course, or we have moodle/user:update capability
-define ('CUSTOMINFO_VISIBLE_NONE',    '0'); // only visible for moodle/user:update capability
+define ('CUSTOMINFO_VISIBLE_NONE',    '0'); // only visible for moodle/user:update (or course) capability
 
 require_once(__DIR__ . '/index_category_form.php');
 require_once(__DIR__ . '/index_field_form.php');
@@ -691,9 +691,12 @@ class custominfo_field extends custominfo_record {
         }
     }
 
+    /**
+     * Edit a field through its form.
+     * @param string $datatype Name of the field plugin.
+     * @return integer Code among self::EDIT_*
+     */
     function edit($datatype) {
-        global $CFG, $DB;
-
         if (!$this->record) {
             $this->record = new stdClass();
             $this->record->objectname = $this->objectname;
