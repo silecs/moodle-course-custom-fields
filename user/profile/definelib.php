@@ -271,45 +271,28 @@ function profile_list_categories() {
 
 /// Are we adding or editing a cateogory?
 function profile_edit_category($id, $redirect) {
-    global $CFG, $DB, $OUTPUT;
-
-    require_once('index_category_form.php');
-    $categoryform = new category_form();
-
-    if ($category = $DB->get_record('custom_info_category', array('id' => $id))) {
-        $categoryform->set_data($category);
+    global $OUTPUT;
+    $category = custominfo_category::type('user');
+    if ($id) {
+        $category->set_id($id);
     }
-
-    if ($categoryform->is_cancelled()) {
-        redirect($redirect);
-    } else {
-        if ($data = $categoryform->get_data()) {
-            if (empty($data->id)) {
-                unset($data->id);
-                $data->sortorder = $DB->count_records('custom_info_category', array('objectname' => 'user')) + 1;
-                $DB->insert_record('custom_info_category', $data, false);
-            } else {
-                $DB->update_record('custom_info_category', $data);
-            }
-            profile_reorder_categories();
+    switch ($category->edit()) {
+        case custominfo_category::EDIT_CANCELLED:
+        case custominfo_category::EDIT_SAVED:
             redirect($redirect);
-
-        }
-
-        if (empty($id)) {
-            $strheading = get_string('profilecreatenewcategory', 'admin');
-        } else {
-            $strheading = get_string('profileeditcategory', 'admin', format_string($category->name));
-        }
-
-        /// Print the page
-        echo $OUTPUT->header();
-        echo $OUTPUT->heading($strheading);
-        $categoryform->display();
-        echo $OUTPUT->footer();
-        die;
+        case custominfo_category::EDIT_DISPLAY:
+            if (empty($id)) {
+                $strheading = get_string('profilecreatenewcategory', 'admin');
+            } else {
+                $strheading = get_string('profileeditcategory', 'admin', format_string($category->get_record()->name));
+            }
+            /// Print the page
+            echo $OUTPUT->header();
+            echo $OUTPUT->heading($strheading);
+            $category->get_form()->display();
+            echo $OUTPUT->footer();
+            die;
     }
-
 }
 
 function profile_edit_field($id, $datatype, $redirect) {

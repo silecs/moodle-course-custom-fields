@@ -6,6 +6,7 @@ define ('CUSTOMINFO_VISIBLE_ALL',     '2'); // visible for all users
 define ('CUSTOMINFO_VISIBLE_PRIVATE', '1'); // either it's our own profile or course, or we have moodle/user:update capability
 define ('CUSTOMINFO_VISIBLE_NONE',    '0'); // only visible for moodle/user:update capability
 
+require_once(__DIR__ . '/index_category_form.php');
 
 
 /**
@@ -323,6 +324,11 @@ class custominfo_category {
     protected $id;
 
     protected $record;
+    protected $form;
+
+    const EDIT_SAVED = 1;
+    const EDIT_CANCELLED = 2;
+    const EDIT_DISPLAY = 3;
 
     public function __construct($objectname, $id=null) {
         $this->objectname = $objectname;
@@ -379,6 +385,29 @@ class custominfo_category {
         }
         $this->id = $record->id;
         $this->record = $record;
+    }
+
+    /**
+     * Accessor method: get the category record
+     * return object record from the category table
+     */
+    function get_record() {
+        return $this->record;
+    }
+
+    /**
+     * Return the form for this category
+     * @return category_form
+     */
+    public function get_form() {
+        if (empty($this->form)) {
+            $this->form = new category_form();
+
+            if ($this->id && $this->record) {
+                $this->form->set_data($this->record);
+            }
+        }
+        return $this->form;
     }
 
     /**
@@ -505,6 +534,37 @@ class custominfo_category {
                 $c->sortorder = $sortorder++;
                 $DB->update_record('custom_info_category', $c);
             }
+        }
+    }
+
+    /**
+     * Insert or update a category with the data submitted from a form.
+     * @global object $DB
+     * @param object $data (opt, null by default)
+     * @return integer A constant among self::EDIT_*
+     */
+    function edit($data=null) {
+        global $DB;
+        $form = $this->get_form();
+        if ($form->is_cancelled()) {
+            return self::EDIT_CANCELLED;
+        } else {
+            if (empty($data)) {
+                $data = $form->get_data();
+            }
+            if ($data) {
+                if (empty($data->id)) {
+                    unset($data->id);
+                    $data->objectname = $this->objectname;
+                    $data->sortorder = $DB->count_records('custom_info_category', array('objectname' => $this->objectname)) + 1;
+                    $DB->insert_record('custom_info_category', $data, false);
+                } else {
+                    $DB->update_record('custom_info_category', $data);
+                }
+                $this->reorder();
+                return self::EDIT_SAVED;
+            }
+            return self::EDIT_DISPLAY;
         }
     }
 }
