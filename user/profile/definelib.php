@@ -289,15 +289,7 @@ function profile_move_category($id, $move) {
  * @return   array   a list of the datatypes suitable to use in a select statement
  */
 function profile_list_datatypes() {
-    $datatypes = array();
-
-    $plugins = core_component::get_plugin_list('profilefield');
-    foreach ($plugins as $type => $unused) {
-        $datatypes[$type] = get_string('pluginname', 'profilefield_'.$type);
-    }
-    asort($datatypes);
-
-    return $datatypes;
+    return custominfo_field::list_datatypes();
 }
 
 /**
