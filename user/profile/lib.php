@@ -48,7 +48,7 @@ function profile_load_data($user) {
 
     if ($fields = $DB->get_records('custom_info_field', array('objectname' => 'user'))) {
         foreach ($fields as $field) {
-            require_once($CFG->dirroot.'/user/profile/field/'.$field->datatype.'/field.class.php');
+            require_once($CFG->libdir.'/custominfo/field/'.$field->datatype.'/field.class.php');
             $newfield = 'profile_field_'.$field->datatype;
             $formfield = new $newfield($field->id, $user->id);
             $formfield->edit_load_object_data($user);
@@ -83,7 +83,7 @@ function profile_definition($mform) {
                 if ($display or $update) {
                     $mform->addElement('header', 'category_'.$category->id, format_string($category->name));
                     foreach ($fields as $field) {
-                        require_once($CFG->dirroot.'/user/profile/field/'.$field->datatype.'/field.class.php');
+                        require_once($CFG->libdir.'/custominfo/field/'.$field->datatype.'/field.class.php');
                         $newfield = 'profile_field_'.$field->datatype;
                         $formfield = new $newfield($field->id);
                         $formfield->edit_field($mform);
@@ -101,7 +101,7 @@ function profile_definition_after_data($mform, $userid) {
 
     if ($fields = $DB->get_records('custom_info_field', array('objectname' => 'user'))) {
         foreach ($fields as $field) {
-            require_once($CFG->dirroot.'/user/profile/field/'.$field->datatype.'/field.class.php');
+            require_once($CFG->libdir.'/custominfo/field/'.$field->datatype.'/field.class.php');
             $newfield = 'profile_field_'.$field->datatype;
             $formfield = new $newfield($field->id, $userid);
             $formfield->edit_after_data($mform);
@@ -115,7 +115,7 @@ function profile_validation($usernew, $files) {
     $err = array();
     if ($fields = $DB->get_records('custom_info_field', array('objectname' => 'user'))) {
         foreach ($fields as $field) {
-            require_once($CFG->dirroot.'/user/profile/field/'.$field->datatype.'/field.class.php');
+            require_once($CFG->libdir.'/custominfo/field/'.$field->datatype.'/field.class.php');
             $newfield = 'profile_field_'.$field->datatype;
             $formfield = new $newfield($field->id, $usernew->id);
             $err += $formfield->edit_validate_field($usernew, $files);
@@ -129,7 +129,7 @@ function profile_save_data($usernew) {
 
     if ($fields = $DB->get_records('custom_info_field', array('objectname' => 'user'))) {
         foreach ($fields as $field) {
-            require_once($CFG->dirroot.'/user/profile/field/'.$field->datatype.'/field.class.php');
+            require_once($CFG->libdir.'/custominfo/field/'.$field->datatype.'/field.class.php');
             $newfield = 'profile_field_'.$field->datatype;
             $formfield = new $newfield($field->id, $usernew->id);
             $formfield->edit_save_data($usernew);
@@ -144,7 +144,7 @@ function profile_display_fields($userid) {
         foreach ($categories as $category) {
             if ($fields = $DB->get_records('custom_info_field', array('categoryid' => $category->id), 'sortorder ASC')) {
                 foreach ($fields as $field) {
-                    require_once($CFG->dirroot.'/user/profile/field/'.$field->datatype.'/field.class.php');
+                    require_once($CFG->libdir.'/custominfo/field/'.$field->datatype.'/field.class.php');
                     $newfield = 'profile_field_'.$field->datatype;
                     $formfield = new $newfield($field->id, $userid);
                     if ($formfield->is_visible() and !$formfield->is_empty()) {
@@ -180,7 +180,7 @@ function profile_signup_fields($mform) {
                  $currentcat = $field->categoryid;
                  $mform->addElement('header', 'category_'.$field->categoryid, format_string($field->categoryname));
             }
-            require_once($CFG->dirroot.'/user/profile/field/'.$field->datatype.'/field.class.php');
+            require_once($CFG->libdir.'/custominfo/field/'.$field->datatype.'/field.class.php');
             $newfield = 'profile_field_'.$field->datatype;
             $formfield = new $newfield($field->fieldid);
             $formfield->edit_field($mform);
@@ -200,7 +200,7 @@ function profile_user_record($userid) {
 
     if ($fields = $DB->get_records('custom_info_field', array('objectname' => 'user'))) {
         foreach ($fields as $field) {
-            require_once($CFG->dirroot.'/user/profile/field/'.$field->datatype.'/field.class.php');
+            require_once($CFG->libdir.'/custominfo/field/'.$field->datatype.'/field.class.php');
             $newfield = 'profile_field_'.$field->datatype;
             $formfield = new $newfield($field->id, $userid);
             if ($formfield->is_object_data()) {

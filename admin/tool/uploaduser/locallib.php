@@ -379,7 +379,7 @@ function uu_pre_process_custom_profile_data($data) {
             if ($fields = $DB->get_records('custom_info_field',
                     array('objectname' => 'user', 'shortname' => $shortname))) {
                 foreach ($fields as $field) {
-                    require_once($CFG->dirroot.'/user/profile/field/'.$field->datatype.'/field.class.php');
+                    require_once($CFG->libdir.'/custominfo/field/'.$field->datatype.'/field.class.php');
                     $newfield = 'profile_field_'.$field->datatype;
                     $formfield = new $newfield($field->id, $data->id);
                     if (method_exists($formfield, 'convert_external_data')) {
@@ -410,7 +410,7 @@ function uu_check_custom_profile_data(&$data) {
             if ($fields = $DB->get_records('custom_info_field',
                     array('objectname' => 'user', 'shortname' => $shortname))) {
                 foreach ($fields as $field) {
-                    require_once($CFG->dirroot.'/user/profile/field/'.$field->datatype.'/field.class.php');
+                    require_once($CFG->libdir.'/custominfo/field/'.$field->datatype.'/field.class.php');
                     $newfield = 'profile_field_'.$field->datatype;
                     $formfield = new $newfield($field->id, 0);
                     if (method_exists($formfield, 'convert_external_data') &&
