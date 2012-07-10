@@ -25,10 +25,12 @@
 
 defined('MOODLE_INTERNAL') || die();
 
+global$CFG;
+
 require_once dirname(__DIR__) . '/profile/lib.php';
 require_once dirname(__DIR__) . '/profile/definelib.php';
-require_once dirname(__DIR__) . '/profile/field/text/field.class.php';
-require_once dirname(__DIR__) . '/profile/field/checkbox/field.class.php';
+require_once $CFG->libdir . '/custominfo/field/text/field.class.php';
+require_once $CFG->libdir . '/custominfo/field/checkbox/field.class.php';
 
 // To run only this test case: phpunit user_testcase user/tests/user_test.php
 
