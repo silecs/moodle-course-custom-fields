@@ -7,6 +7,7 @@ define ('CUSTOMINFO_VISIBLE_PRIVATE', '1'); // either it's our own profile or co
 define ('CUSTOMINFO_VISIBLE_NONE',    '0'); // only visible for moodle/user:update capability
 
 require_once(__DIR__ . '/index_category_form.php');
+require_once(__DIR__ . '/index_field_form.php');
 
 
 /**
@@ -688,5 +689,95 @@ class custominfo_field extends custominfo_record {
                 }
             }
         }
+    }
+
+    function edit($datatype) {
+        global $CFG, $DB;
+
+        if (!$this->record) {
+            $this->record = new stdClass();
+            $this->record->objectname = $this->objectname;
+            $this->record->datatype = $datatype;
+            $this->record->description = '';
+            $this->record->descriptionformat = FORMAT_HTML;
+            $this->record->defaultdata = '';
+            $this->record->defaultdataformat = FORMAT_HTML;
+        }
+
+        $form = $this->get_form();
+
+        if ($form->is_cancelled()) {
+            return self::EDIT_CANCELLED;
+        } else {
+            if ($data = $form->get_data()) {
+                require_once(__DIR__.'/field/'.$datatype.'/define.class.php');
+                $newfield = 'profile_define_'.$datatype;
+                $formfield = new $newfield();
+
+                // Collect the description and format back into the proper data structure from the editor
+                // Note: This field will ALWAYS be an editor
+                $data->descriptionformat = $data->description['format'];
+                $data->description = $data->description['text'];
+                $data->objectname = $this->objectname;
+
+                // Check whether the default data is an editor, this is (currently) only the
+                // textarea field type
+                if (is_array($data->defaultdata) && array_key_exists('text', $data->defaultdata)) {
+                    // Collect the default data and format back into the proper data structure from the editor
+                    $data->defaultdataformat = $data->defaultdata['format'];
+                    $data->defaultdata = $data->defaultdata['text'];
+                }
+
+                // Convert the data format for
+                if (is_array($form->editors())) {
+                    foreach ($form->editors() as $editor) {
+                        if (isset($this->record->$editor)) {
+                            $this->record->{$editor.'format'} = $this->record->{$editor}['format'];
+                            $this->record->$editor = $this->record->{$editor}['text'];
+                        }
+                    }
+                }
+
+                $formfield->define_save($data);
+                $this->reorder();
+                custominfo_category::type($this->objectname)->reorder();
+                return self::EDIT_SAVED;
+            }
+            return self::EDIT_DISPLAY;
+        }
+    }
+
+    /**
+     * Return the form for this record
+     * @return category_form
+     */
+    public function get_form() {
+        if (empty($this->form)) {
+            // Clean and prepare description for the editor
+            $this->record->description = array(
+                'text' => clean_text($this->record->description, $this->record->descriptionformat),
+                'format' => $this->record->descriptionformat,
+                'itemid' => 0
+            );
+
+            $this->form = new field_form(null, $this->record->datatype);
+
+            // Convert the data format for
+            if (is_array($this->form->editors())) {
+                foreach ($this->form->editors() as $editor) {
+                    if (isset($this->record->$editor)) {
+                        $this->record->$editor = clean_text($this->record->$editor, $this->record->{$editor . 'format'});
+                        $this->record->$editor = array(
+                            'text' => $this->record->$editor,
+                            'format' => $this->record->{$editor . 'format'},
+                            'itemid' => 0
+                        );
+                    }
+                }
+            }
+
+            $this->form->set_data($this->record);
+        }
+        return $this->form;
     }
 }

@@ -18,7 +18,7 @@ class field_form extends moodleform {
 
         /// Everything else is dependant on the data type
         $datatype = $this->_customdata;
-        require_once($CFG->dirroot.'/user/profile/field/'.$datatype.'/define.class.php');
+        require_once(__DIR__.'/field/'.$datatype.'/define.class.php');
         $newfield = 'profile_define_'.$datatype;
         $this->field = new $newfield();
 
