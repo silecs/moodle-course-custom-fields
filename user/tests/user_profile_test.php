@@ -41,25 +41,8 @@ require_once dirname(__DIR__) . '/profile/field/checkbox/field.class.php';
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 class user_profile_testcase extends advanced_testcase {
-    public function setUp() {
-    }
-
-    public function test_text_empty() {
-        $formfield = new profile_field_text();
-        $this->assertInstanceOf('profile_field_base', $formfield);
-        $this->assertTrue($formfield->is_empty());
-        $this->assertEmpty($formfield->inputname);
-    }
-
-    public function test_text_empty_user() {
-        $formfield = new profile_field_text(1, 2);
-        $this->assertInstanceOf('profile_field_base', $formfield);
-        $this->assertTrue($formfield->is_empty());
-        $this->assertEmpty($formfield->inputname);
-    }
-
-    public function test_text_and_checkbox() {
-        $this->resetAfterTest(false);
+    public function initDb() {
+        $this->resetAllData();
         $dataset = $this->createCsvDataSet(
             array(
                 'user' => __DIR__ . '/fixtures/user_dataset.csv',
@@ -69,6 +52,27 @@ class user_profile_testcase extends advanced_testcase {
             )
         );
         $this->loadDataSet($dataset);
+    }
+
+    public function test_text_empty() {
+        $this->resetAfterTest(false);
+        $formfield = new profile_field_text();
+        $this->assertInstanceOf('profile_field_base', $formfield);
+        $this->assertTrue($formfield->is_empty());
+        $this->assertEmpty($formfield->inputname);
+    }
+
+    public function test_text_empty_user() {
+        $this->resetAfterTest(false);
+        $formfield = new profile_field_text(1, 2);
+        $this->assertInstanceOf('profile_field_base', $formfield);
+        $this->assertTrue($formfield->is_empty());
+        $this->assertEmpty($formfield->inputname);
+    }
+
+    public function test_text_and_checkbox() {
+        $this->resetAfterTest(false);
+        $this->initDb();
 
         // text field
         $formfield = new profile_field_text(1, 3);
@@ -94,7 +98,7 @@ class user_profile_testcase extends advanced_testcase {
     }
 
     public function test_profile_move_category() {
-        $this->resetAfterTest(false);
+        $this->resetAfterTest(true);
         $this->assertTrue(profile_move_category(3, 'down'));
         $expected = array("1" => "maincategory", "2" => "third category", "3" => "second category");
         $this->assertEquals($expected, profile_list_categories());
@@ -105,12 +109,16 @@ class user_profile_testcase extends advanced_testcase {
     }
 
     public function test_profile_delete_category() {
+        global $DB;
         $this->resetAfterTest(true);
+        $this->initDb();
         $expected = array("1" => "maincategory", "3" => "second category", "2" => "third category");
         $this->assertEquals($expected, profile_list_categories());
+        $this->assertEquals('1', $DB->get_field('custom_info_field', 'categoryid', array('id' => 1)));
         $this->assertTrue(profile_delete_category(1));
         $expected = array("3" => "second category", "2" => "third category");
         $this->assertEquals($expected, profile_list_categories());
+        $this->assertNotNull($DB->get_field('custom_info_field', 'categoryid', array('id' => 1)));
 
         $this->setExpectedException('moodle_exception', 'Incorrect category id!', 0);
         $this->assertFalse(profile_delete_category(1));
