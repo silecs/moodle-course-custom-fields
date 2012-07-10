@@ -319,10 +319,11 @@ abstract class custominfo_field_base {
 } /// End of class definition
 
 
-class custominfo_category {
+abstract class custominfo_record {
     protected $objectname;
     protected $id;
 
+    protected $table; // must be overriden
     protected $record;
     protected $form;
 
@@ -331,23 +332,65 @@ class custominfo_category {
     const EDIT_DISPLAY = 3;
 
     public function __construct($objectname, $id=null) {
+        if (empty($this->table)) {
+            print_error('mustbeoveride', 'debug', '', '');
+        }
         $this->objectname = $objectname;
         $this->set_id($id);
     }
 
     /**
-     * Builds a new instance not linked to a soecific category.
-     * @param string $objectname
-     * @return custominfo_category new instance
+     * Accessor method: set the id
+     * @param integer $id  id from the table
      */
-    public static function type($objectname) {
-        return new custominfo_category($objectname);
+    function set_id($id) {
+        global $DB;
+        $this->id = $id;
+        if (isset($id)) {
+            $this->record = $DB->get_record($this->table, array('id' => $id));
+            if (!$this->record || $this->record->objectname != $this->objectname) {
+                print_error('invaliditemid');
+            }
+        }
     }
 
     /**
-     * Builds a new instance from a category ID.
-     * @param integer $id category ID
-     * @return custominfo_category new instance
+     * Accessor method: set the record (and id)
+     * @param object $record  record from the table
+     */
+    function set_record($record) {
+        if (empty($record->id) || empty($record->name) || empty($record->objectname) || $record->objectname != $this->objectname) {
+            print_error('invaliditemid');
+        }
+        $this->id = $record->id;
+        $this->record = $record;
+    }
+
+    /**
+     * Accessor method: get the record
+     * return object record from the table
+     */
+    function get_record() {
+        return $this->record;
+    }
+}
+
+class custominfo_category extends custominfo_record {
+    protected $table = 'custom_info_category';
+
+    /**
+     * Builds a new instance not linked to a specific record.
+     * @param string $objectname
+     * @return custominfo_record new instance
+     */
+    public static function type($objectname) {
+        return new self($objectname);
+    }
+
+    /**
+     * Builds a new instance from a ID.
+     * @param integer $id ID
+     * @return custominfo_record new instance
      */
     public static function findById($id) {
         global $DB;
@@ -355,59 +398,9 @@ class custominfo_category {
         if (!$record) {
             print_error('invalidcategoryid');
         }
-        $c = new custominfo_category($record->objectname);
+        $c = new self($record->objectname);
         $c->set_record($record);
         return $c;
-    }
-
-    /**
-     * Accessor method: set the category id
-     * @param integer $id  id from the category table
-     */
-    function set_id($id) {
-        global $DB;
-        $this->id = $id;
-        if (isset($id)) {
-            $this->record = $DB->get_record('custom_info_category', array('id' => $id));
-            if (!$this->record || $this->record->objectname != $this->objectname) {
-                print_error('invalidcategoryid');
-            }
-        }
-    }
-
-    /**
-     * Accessor method: set the category record (and id)
-     * @param object $record  record from the category table
-     */
-    function set_record($record) {
-        if (empty($record->id) || empty($record->name) || empty($record->objectname) || $record->objectname != $this->objectname) {
-            print_error('invalidcategoryid');
-        }
-        $this->id = $record->id;
-        $this->record = $record;
-    }
-
-    /**
-     * Accessor method: get the category record
-     * return object record from the category table
-     */
-    function get_record() {
-        return $this->record;
-    }
-
-    /**
-     * Return the form for this category
-     * @return category_form
-     */
-    public function get_form() {
-        if (empty($this->form)) {
-            $this->form = new category_form();
-
-            if ($this->id && $this->record) {
-                $this->form->set_data($this->record);
-            }
-        }
-        return $this->form;
     }
 
     /**
@@ -567,18 +560,25 @@ class custominfo_category {
             return self::EDIT_DISPLAY;
         }
     }
+
+    /**
+     * Return the form for this record
+     * @return category_form
+     */
+    public function get_form() {
+        if (empty($this->form)) {
+            $this->form = new category_form();
+
+            if ($this->id && $this->record) {
+                $this->form->set_data($this->record);
+            }
+        }
+        return $this->form;
+    }
 }
 
-class custominfo_field {
-    protected $objectname;
-    protected $id;
-
-    protected $record;
-
-    public function __construct($objectname, $id=null) {
-        $this->objectname = $objectname;
-        $this->set_id($id);
-    }
+class custominfo_field extends custominfo_record {
+    protected $table = 'custom_info_field';
 
     /**
      * Builds a new instance not linked to a soecific category.
@@ -598,38 +598,11 @@ class custominfo_field {
         global $DB;
         $record = $DB->get_record('custom_info_field', array('id' => $id));
         if (!$record) {
-            print_error('invalidfieldid');
+            print_error('invaliditemid');
         }
         $c = new self($record->objectname);
         $c->set_record($record);
         return $c;
-    }
-
-    /**
-     * Accessor method: set the field id
-     * @param integer $id  id from the field table
-     */
-    function set_id($id) {
-        global $DB;
-        $this->id = $id;
-        if (isset($id)) {
-            $this->record = $DB->get_record('custom_info_field', array('id' => $id));
-            if (!$this->record || $this->record->objectname != $this->objectname) {
-                print_error('invalidfieldid');
-            }
-        }
-    }
-
-    /**
-     * Accessor method: set the field record (and id)
-     * @param object $record  record from the field table
-     */
-    function set_record($record) {
-        if (empty($record->id) || empty($record->name) || empty($record->objectname) || $record->objectname != $this->objectname) {
-            print_error('invalidcustomfieldid');
-        }
-        $this->id = $record->id;
-        $this->record = $record;
     }
 
     /**
