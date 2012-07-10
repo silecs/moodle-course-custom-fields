@@ -446,6 +446,8 @@ class custominfo_category {
 
         /// Does the category contain any fields
         if ($DB->count_records('custom_info_field', array('categoryid' => $this->record->id))) {
+            // warning: this legacy code does not select a neighbouring category
+            // It selects a category whose id is close to the late sortorder.
             if (array_key_exists($this->record->sortorder-1, $categories)) {
                 $newcategory = $categories[$this->record->sortorder-1];
             } else if (array_key_exists($this->record->sortorder+1, $categories)) {
