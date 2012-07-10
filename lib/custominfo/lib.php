@@ -783,4 +783,19 @@ class custominfo_field extends custominfo_record {
         }
         return $this->form;
     }
+
+    /**
+     * Return an assoc array of the available fields datatypes
+     * @return array assoc array(type => fullname)
+     */
+    public static function list_datatypes() {
+        $datatypes = array();
+        $plugins = get_plugin_list('profilefield');
+        foreach ($plugins as $type => $unused) {
+            $datatypes[$type] = get_string('pluginname', 'profilefield_'.$type);
+        }
+        asort($datatypes);
+
+        return $datatypes;
+    }
 }
