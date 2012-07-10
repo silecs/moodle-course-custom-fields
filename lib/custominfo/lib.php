@@ -508,3 +508,152 @@ class custominfo_category {
         }
     }
 }
+
+class custominfo_field {
+    protected $objectname;
+    protected $id;
+
+    protected $record;
+
+    public function __construct($objectname, $id=null) {
+        $this->objectname = $objectname;
+        $this->set_id($id);
+    }
+
+    /**
+     * Builds a new instance not linked to a soecific category.
+     * @param string $objectname
+     * @return custominfo_field new instance
+     */
+    public static function type($objectname) {
+        return new self($objectname);
+    }
+
+    /**
+     * Builds a new instance from a category ID.
+     * @param integer $id category ID
+     * @return custominfo_field new instance
+     */
+    public static function findById($id) {
+        global $DB;
+        $record = $DB->get_record('custom_info_field', array('id' => $id));
+        if (!$record) {
+            print_error('invalidfieldid');
+        }
+        $c = new self($record->objectname);
+        $c->set_record($record);
+        return $c;
+    }
+
+    /**
+     * Accessor method: set the field id
+     * @param integer $id  id from the field table
+     */
+    function set_id($id) {
+        global $DB;
+        $this->id = $id;
+        if (isset($id)) {
+            $this->record = $DB->get_record('custom_info_field', array('id' => $id));
+            if (!$this->record || $this->record->objectname != $this->objectname) {
+                print_error('invalidfieldid');
+            }
+        }
+    }
+
+    /**
+     * Accessor method: set the field record (and id)
+     * @param object $record  record from the field table
+     */
+    function set_record($record) {
+        if (empty($record->id) || empty($record->name) || empty($record->objectname) || $record->objectname != $this->objectname) {
+            print_error('invalidcustomfieldid');
+        }
+        $this->id = $record->id;
+        $this->record = $record;
+    }
+
+    /**
+     * Delete this field
+     * @param integer $id
+     * @return  boolean   success of operation
+     */
+    function delete() {
+        global $DB;
+        /// Remove any data associated with this field
+        if (!$DB->delete_records('custom_info_data', array('fieldid' => $this->id))) {
+            print_error('cannotdeletecustomfield');
+        }
+        /// Try to remove the record from the database
+        $deleted = $DB->delete_records('custom_info_field', array('id' => $this->id));
+        /// Reorder the remaining fields in the same category
+        $this->reorder();
+        return $deleted;
+    }
+
+    /**
+     * Change the sortorder of a field
+     * @param   string  $dir  direction of move: "up" or "down"
+     * @return  boolean       success of operation
+     */
+    function move($dir) {
+        global $DB;
+
+        if (!$this->record) {
+            print_error('invalidcustomfieldid');
+        }
+
+        /// Count the number of fields in this category
+        $fieldcount = $DB->count_records('custom_info_field', array('categoryid' => $this->record->categoryid));
+
+        /// Calculate the new sortorder
+        if (($dir == 'up') and ($this->record->sortorder > 1)) {
+            $neworder = $this->record->sortorder - 1;
+        } elseif (($dir == 'down') and ($this->record->sortorder < $fieldcount)) {
+            $neworder = $this->record->sortorder + 1;
+        } else {
+            return false;
+        }
+
+        /// Retrieve the field object that is currently residing in the new position
+        $changed = false;
+        $swapfield = $DB->get_record(
+                'custom_info_field', array('categoryid' => $this->record->categoryid, 'sortorder' => $neworder), 'id, sortorder'
+        );
+        if ($swapfield) {
+
+            /// Swap the sortorders
+            $swapfield->sortorder = $this->record->sortorder;
+            $this->record->sortorder     = $neworder;
+
+            /// Update the field records
+            $DB->update_record('custom_info_field', $this->record);
+            $DB->update_record('custom_info_field', $swapfield);
+            $changed = true;
+        }
+
+        $this->reorder();
+        return $changed;
+    }
+
+    /**
+     * Reorder the profile fields within a given category
+     */
+    function reorder() {
+        global $DB;
+        $categories = $DB->get_records('custom_info_category', array('objectname' => $this->objectname));
+        if ($categories) {
+            foreach ($categories as $category) {
+                $sortorder = 1;
+                $fields = $DB->get_records('custom_info_field', array('categoryid' => $category->id), 'sortorder ASC');
+                if ($fields) {
+                    foreach ($fields as $field) {
+                        $f = new stdClass();
+                        $f->id = $field->id;
+                        $f->sortorder = $sortorder++;
+                        $DB->update_record('custom_info_field', $f);
+                    }
+                }
+            }
+        }
+    }
+}

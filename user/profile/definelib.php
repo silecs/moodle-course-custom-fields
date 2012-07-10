@@ -197,22 +197,7 @@ class profile_define_base {
  * at the field at the given startorder
  */
 function profile_reorder_fields() {
-    global $DB;
-
-    if ($categories = $DB->get_records('custom_info_category', array('objectname' => 'user'))) {
-        foreach ($categories as $category) {
-            $i = 1;
-            if ($fields = $DB->get_records('custom_info_field',
-                    array('categoryid' => $category->id), 'sortorder ASC')) {
-                foreach ($fields as $field) {
-                    $f = new stdClass();
-                    $f->id = $field->id;
-                    $f->sortorder = $i++;
-                    $DB->update_record('custom_info_field', $f);
-                }
-            }
-        }
-    }
+    return custominfo_field::type('user')->reorder();
 }
 
 /**
@@ -234,18 +219,7 @@ function profile_delete_category($id) {
 
 
 function profile_delete_field($id) {
-    global $DB;
-
-    /// Remove any user data associated with this field
-    if (!$DB->delete_records('custom_info_data', array('fieldid' => $id))) {
-        print_error('cannotdeletecustomfield');
-    }
-
-    /// Try to remove the record from the database
-    $DB->delete_records('custom_info_field', array('id' => $id));
-
-    /// Reorder the remaining fields in the same category
-    profile_reorder_fields();
+    return custominfo_field::findById($id)->delete();
 }
 
 /**
@@ -255,38 +229,7 @@ function profile_delete_field($id) {
  * @return  boolean   success of operation
  */
 function profile_move_field($id, $move) {
-    global $DB;
-
-    /// Get the field object
-    if (!$field = $DB->get_record('custom_info_field', array('id' => $id), 'id, sortorder, categoryid')) {
-        return false;
-    }
-    /// Count the number of fields in this category
-    $fieldcount = $DB->count_records('custom_info_field', array('categoryid' => $field->categoryid));
-
-    /// Calculate the new sortorder
-    if ( ($move == 'up') and ($field->sortorder > 1)) {
-        $neworder = $field->sortorder - 1;
-    } elseif ( ($move == 'down') and ($field->sortorder < $fieldcount)) {
-        $neworder = $field->sortorder + 1;
-    } else {
-        return false;
-    }
-
-    /// Retrieve the field object that is currently residing in the new position
-    if ($swapfield = $DB->get_record('custom_info_field',
-            array('categoryid' => $field->categoryid, 'sortorder' => $neworder), 'id, sortorder')) {
-
-        /// Swap the sortorders
-        $swapfield->sortorder = $field->sortorder;
-        $field->sortorder     = $neworder;
-
-        /// Update the field records
-        $DB->update_record('custom_info_field', $field);
-        $DB->update_record('custom_info_field', $swapfield);
-    }
-
-    profile_reorder_fields();
+    return custominfo_field::findById($id)->move($move);
 }
 
 /**
