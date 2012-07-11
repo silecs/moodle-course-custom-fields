@@ -329,9 +329,7 @@ function user_get_user_details($user, $course = null, array $userfields = array(
                                         ORDER BY c.sortorder ASC, f.sortorder ASC");
         $userdetails['customfields'] = array();
         foreach ($fields as $field) {
-            require_once($CFG->libdir.'/custominfo/field/'.$field->datatype.'/field.class.php');
-            $newfield = 'profile_field_'.$field->datatype;
-            $formfield = new $newfield($field->id, $user->id);
+            $formfield = profile_field_factory($field->datatype, $field->id, $user->id);
             if ($formfield->is_visible() and !$formfield->is_empty()) {
 
                 // We only use display_data in fields that require text formatting.
