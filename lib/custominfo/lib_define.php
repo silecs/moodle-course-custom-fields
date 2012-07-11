@@ -1,6 +1,9 @@
 <?php
 
-class custominfo_define_base {
+/**
+ * This class defines the form that each field type will extend.
+ */
+abstract class custominfo_define_base {
     // must be overriden
     protected $objectname;
 
