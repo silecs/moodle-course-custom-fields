@@ -285,15 +285,35 @@ abstract class profile_field_base extends custominfo_field_base {
 
 /***** General purpose functions for customisable user profiles *****/
 
+/**
+ * Create a new instance of a child class of custominfo_field_base.
+ *
+ * @TODO This temporary function will migrate into a generic custominfo function.
+ *       Then it will use a local implementation of custominfo_field_extension placed in (user|course)/custominfo/locallib.php.
+ *
+ * @param object $fieldtype  The custominfo field type
+ * @param object $fieldid    (opt) The field id
+ * @param integer $objectid  (opt) The objectid to fill the field from
+ * @return custominfo_field_base
+ */
+function profile_field_factory($fieldtype, $fieldid=0, $objectid=0) {
+    global $CFG;
+    require_once($CFG->libdir.'/custominfo/field/'.$fieldtype.'/field.class.php');
+    $newfield = 'profile_field_'.$fieldtype;
+    if (empty($fieldid)) {
+        return (new $newfield());
+    } else {
+        return (new $newfield($fieldid, $objectid));
+    }
+}
+
 function profile_load_data($user) {
-    global $CFG, $DB;
+    global $DB;
 
     $fields = $DB->get_records('custom_info_field', array('objectname' => 'user'));
     if ($fields) {
         foreach ($fields as $field) {
-            require_once($CFG->libdir.'/custominfo/field/'.$field->datatype.'/field.class.php');
-            $newfield = 'profile_field_'.$field->datatype;
-            $formfield = new $newfield($field->id, $user->id);
+            $formfield = profile_field_factory($field->datatype, $field->id, $user->id);
             $formfield->edit_load_object_data($user);
         }
     }
@@ -327,9 +347,7 @@ function profile_definition($mform, $userid = 0) {
                 if ($display or $update) {
                     $mform->addElement('header', 'category_'.$category->id, format_string($category->name));
                     foreach ($fields as $field) {
-                        require_once($CFG->libdir.'/custominfo/field/'.$field->datatype.'/field.class.php');
-                        $newfield = 'profile_field_'.$field->datatype;
-                        $formfield = new $newfield($field->id, $userid);
+                        $formfield = profile_field_factory($field->datatype, $field->id);
                         $formfield->edit_field($mform);
                     }
                 }
@@ -346,9 +364,7 @@ function profile_definition_after_data($mform, $userid) {
     $fields = $DB->get_records('custom_info_field', array('objectname' => 'user'));
     if ($fields) {
         foreach ($fields as $field) {
-            require_once($CFG->libdir.'/custominfo/field/'.$field->datatype.'/field.class.php');
-            $newfield = 'profile_field_'.$field->datatype;
-            $formfield = new $newfield($field->id, $userid);
+            $formfield = profile_field_factory($field->datatype, $field->id, $userid);
             $formfield->edit_after_data($mform);
         }
     }
@@ -361,9 +377,7 @@ function profile_validation($usernew, $files) {
     $fields = $DB->get_records('custom_info_field', array('objectname' => 'user'));
     if ($fields) {
         foreach ($fields as $field) {
-            require_once($CFG->libdir.'/custominfo/field/'.$field->datatype.'/field.class.php');
-            $newfield = 'profile_field_'.$field->datatype;
-            $formfield = new $newfield($field->id, $usernew->id);
+            $formfield = profile_field_factory($field->datatype, $field->id, $usernew->id);
             $err += $formfield->edit_validate_field($usernew, $files);
         }
     }
@@ -376,9 +390,7 @@ function profile_save_data($usernew) {
     $fields = $DB->get_records('custom_info_field', array('objectname' => 'user'));
     if ($fields) {
         foreach ($fields as $field) {
-            require_once($CFG->libdir.'/custominfo/field/'.$field->datatype.'/field.class.php');
-            $newfield = 'profile_field_'.$field->datatype;
-            $formfield = new $newfield($field->id, $usernew->id);
+            $formfield = profile_field_factory($field->datatype, $field->id, $usernew->id);
             $formfield->edit_save_data($usernew);
         }
     }
@@ -393,9 +405,7 @@ function profile_display_fields($userid) {
             $fields = $DB->get_records('custom_info_field', array('categoryid' => $category->id), 'sortorder ASC');
             if ($fields) {
                 foreach ($fields as $field) {
-                    require_once($CFG->libdir.'/custominfo/field/'.$field->datatype.'/field.class.php');
-                    $newfield = 'profile_field_'.$field->datatype;
-                    $formfield = new $newfield($field->id, $userid);
+                    $formfield = profile_field_factory($field->datatype, $field->id, $userid);
                     if ($formfield->is_visible() and !$formfield->is_empty()) {
                         print_row(format_string($formfield->field->name.':'), $formfield->display_data());
                     }
@@ -430,9 +440,7 @@ function profile_signup_fields($mform) {
                  $currentcat = $field->categoryid;
                  $mform->addElement('header', 'category_'.$field->categoryid, format_string($field->categoryname));
             }
-            require_once($CFG->libdir.'/custominfo/field/'.$field->datatype.'/field.class.php');
-            $newfield = 'profile_field_'.$field->datatype;
-            $formfield = new $newfield($field->fieldid);
+            $formfield = profile_field_factory($field->datatype, $field->fieldid);
             $formfield->edit_field($mform);
         }
     }
@@ -451,9 +459,7 @@ function profile_user_record($userid) {
     $fields = $DB->get_records('custom_info_field', array('objectname' => 'user'));
     if ($fields) {
         foreach ($fields as $field) {
-            require_once($CFG->libdir.'/custominfo/field/'.$field->datatype.'/field.class.php');
-            $newfield = 'profile_field_'.$field->datatype;
-            $formfield = new $newfield($field->id, $userid);
+            $formfield = profile_field_factory($field->datatype, $field->id, $userid);
             if ($formfield->is_object_data()) {
                 $usercustomfields->{$field->shortname} = $formfield->data;
             }

@@ -400,9 +400,7 @@ class custominfo_field extends custominfo_record {
             return self::EDIT_CANCELLED;
         } else {
             if ($data = $form->get_data()) {
-                require_once(__DIR__.'/field/'.$datatype.'/define.class.php');
-                $newfield = 'profile_define_'.$datatype;
-                $formfield = new $newfield();
+                $formfield = profile_field_factory($datatype);
 
                 // Collect the description and format back into the proper data structure from the editor
                 // Note: This field will ALWAYS be an editor
