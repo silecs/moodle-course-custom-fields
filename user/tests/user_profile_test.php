@@ -58,16 +58,16 @@ class user_profile_testcase extends advanced_testcase {
 
     public function test_text_empty() {
         $this->resetAfterTest(false);
-        $formfield = new profile_field_text();
-        $this->assertInstanceOf('profile_field_base', $formfield);
+        $formfield = new profile_field_text('user');
+        $this->assertInstanceOf('custominfo_field_base', $formfield);
         $this->assertTrue($formfield->is_empty());
         $this->assertEmpty($formfield->inputname);
     }
 
     public function test_text_empty_user() {
         $this->resetAfterTest(false);
-        $formfield = new profile_field_text(1, 2);
-        $this->assertInstanceOf('profile_field_base', $formfield);
+        $formfield = new profile_field_text('user', 1, 2);
+        $this->assertInstanceOf('custominfo_field_base', $formfield);
         $this->assertTrue($formfield->is_empty());
         $this->assertEmpty($formfield->inputname);
     }
@@ -77,16 +77,16 @@ class user_profile_testcase extends advanced_testcase {
         $this->initDb();
 
         // text field
-        $formfield = new profile_field_text(1, 3);
-        $this->assertInstanceOf('profile_field_base', $formfield);
+        $formfield = new profile_field_text('user', 1, 3);
+        $this->assertInstanceOf('custominfo_field_base', $formfield);
         $this->assertFalse($formfield->is_empty());
         $this->assertEquals('my own text 1', $formfield->display_data());
         $this->assertNotEmpty($formfield->inputname);
         $this->assertTrue($formfield->is_visible());
 
         // checkbox field
-        $formfield = new profile_field_checkbox(2, 3);
-        $this->assertInstanceOf('profile_field_base', $formfield);
+        $formfield = new profile_field_checkbox('user', 2, 3);
+        $this->assertInstanceOf('custominfo_field_base', $formfield);
         $this->assertFalse($formfield->is_empty());
         $this->assertRegExp('/<input\b.*\btype="checkbox"/', $formfield->display_data());
         $this->assertNotEmpty($formfield->inputname);

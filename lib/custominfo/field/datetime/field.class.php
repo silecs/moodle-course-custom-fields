@@ -28,7 +28,7 @@
  * @copyright 2010 Mark Nelson <markn@moodle.com>
  * @license http://www.gnu.org/copyleft/gpl.html GNU Public License
  */
-class profile_field_datetime extends profile_field_base {
+class profile_field_datetime extends custominfo_field_base {
 
     /**
      * Handles editing datetime fields.

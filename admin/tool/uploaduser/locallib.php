@@ -44,7 +44,8 @@ define('UU_PWRESET_NONE', 0);
 define('UU_PWRESET_WEAK', 1);
 define('UU_PWRESET_ALL', 2);
 
-require_once($CFG->dirroot.'/user/profile/lib.php');
+global $CFG;
+require_once($CFG->libdir . '/custominfo/lib.php');
 
 /**
  * Tracking of processed users.
@@ -401,7 +402,7 @@ function uu_pre_process_custom_profile_data($data) {
             if ($fields = $DB->get_records('custom_info_field',
                     array('objectname' => 'user', 'shortname' => $shortname))) {
                 foreach ($fields as $field) {
-                    $formfield = profile_field_factory($field, $data->id);
+                    $formfield = custominfo_field_factory("user", $field, $data->id);
                     if (method_exists($formfield, 'convert_external_data')) {
                         $data->$key = $formfield->convert_external_data($value);
                     }
@@ -436,7 +437,7 @@ function uu_check_custom_profile_data(&$data) {
             if ($fields = $DB->get_records('custom_info_field',
                     array('objectname' => 'user', 'shortname' => $shortname))) {
                 foreach ($fields as $field) {
-                    $formfield = profile_field_factory($field, 0);
+                    $formfield = custominfo_field_factory("user", $field, 0);
                     if (method_exists($formfield, 'convert_external_data') &&
                             is_null($formfield->convert_external_data($value))) {
                         $data['status'][] = get_string('invaliduserfield', 'error', $shortname);

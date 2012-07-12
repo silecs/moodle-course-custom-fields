@@ -21,6 +21,7 @@ abstract class custominfo_field_base {
     /// These 2 variables are really what we're interested in.
     /// Everything else can be extracted from them
     protected $fieldid;
+    protected $objectname;
     protected $objectid;
 
     public $field;
@@ -28,19 +29,23 @@ abstract class custominfo_field_base {
     public $data;
     public $dataformat;
 
-    // must be overriden
-    protected $objectname;
+    /* @var string */
     protected $capability;
+    /** @var custominfo_field_extension_i */
+    protected $extension;
 
     /**
      * Constructor method.
+     * @param string $objectname The model has uses custominfo (e.g. user, course)
      * @param integer $fieldid    id of the profile from the custom_info_field table
      * @param integer $objectid   id of the object whose we are displaying data
      */
-    function __construct($fieldid=0, $objectid=0) {
-        if (is_null($this->objectname) || is_null($this->capability)) {
-            print_error('mustbeoveride', 'debug', '', 'custominfo_field_base');
-        }
+    public function __construct($objectname, $fieldid=0, $objectid=0) {
+        global $CFG;
+        $modelclass = 'custominfo_field_extension_' . $objectname;
+        require_once($CFG->dirroot.'/'.$objectname.'/custominfo/locallib.php');
+        $this->extension = new $modelclass();
+        $this->capability = $this->extension->get_capability();
         $this->set_fieldid($fieldid);
         $this->set_objectid($objectid);
         $this->load_data();
@@ -278,7 +283,9 @@ abstract class custominfo_field_base {
      * Check if the field data is visible to the current user
      * @return  boolean
      */
-    abstract function is_visible();
+    function is_visible() {
+        return $this->extension->is_visible($this->field, $this->objectid);
+    }
 
     /**
      * Check if the field data is considered empty
@@ -322,3 +329,41 @@ abstract class custominfo_field_base {
 
 } /// End of class definition
 
+/**
+ * Create a new instance of a child class of custominfo_field_base.
+ *
+ * @param string $objectname The model has uses custominfo (user, course)
+ * @param object $fieldtype  The custominfo field type
+ * @param object $fieldid    (opt) The field id
+ * @param integer $objectid  (opt) The objectid to fill the field from
+ * @return custominfo_field_base
+ */
+function custominfo_field_factory($objectname, $fieldtype, $fieldid=0, $objectid=0) {
+    global $CFG;
+    require_once($CFG->libdir.'/custominfo/field/'.$fieldtype.'/field.class.php');
+    $newfield = 'profile_field_'.$fieldtype;
+    if (empty($fieldid)) {
+        return (new $newfield($objectname));
+    } else {
+        return (new $newfield($objectname, $fieldid, $objectid));
+    }
+}
+
+/**
+ * Interface that each model (user, course) has to implement in a class custominfo_field_extension_{model}
+ * placed in {model}/custominfo/locallib.php
+ */
+interface custominfo_field_extension_i {
+    /**
+     * @return string
+     */
+    public function get_capability();
+
+    /**
+     * Check if the field data is visible to the current user
+     * @param custominfo_field_base $field
+     * @param integer $objectid
+     * @return  boolean
+     */
+    public function is_visible($field, $objectid);
+}

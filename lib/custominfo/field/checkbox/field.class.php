@@ -28,20 +28,21 @@
  * @copyright  2008 onwards Shane Elliot {@link http://pukunui.com}
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
-class profile_field_checkbox extends profile_field_base {
+class profile_field_checkbox extends custominfo_field_base {
 
     /**
      * Constructor method.
      * Pulls out the options for the checkbox from the database and sets the
      * the corresponding key for the data if it exists
      *
-     * @param int $fieldid
-     * @param int $userid
+     * @param string $objectname The model has uses custominfo (e.g. user, course)
+     * @param integer $fieldid    id of the profile from the custom_info_field table
+     * @param integer $objectid   id of the object whose we are displaying data
      */
-    public function profile_field_checkbox($fieldid=0, $userid=0) {
+    public function profile_field_checkbox($objectname, $fieldid=0, $objectid=0) {
         global $DB;
         // First call parent constructor.
-        $this->profile_field_base($fieldid, $userid);
+        parent::__construct($objectname, $fieldid, $objectid);
 
         if (!empty($this->field)) {
             $datafield = $DB->get_field('custom_info_data', 'data',
@@ -65,7 +66,7 @@ class profile_field_checkbox extends profile_field_base {
             $checkbox->setChecked(true);
         }
         $mform->setType($this->inputname, PARAM_BOOL);
-        if ($this->is_required() and !has_capability('moodle/user:update', context_system::instance())) {
+        if ($this->is_required() and !has_capability($this->capability, context_system::instance())) {
             $mform->addRule($this->inputname, get_string('required'), 'nonzero', null, 'client');
         }
     }
