@@ -28,7 +28,7 @@
  * @copyright  2007 onwards Shane Elliot {@link http://pukunui.com}
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
-class profile_field_text extends profile_field_base {
+class profile_field_text extends custominfo_field_base {
 
     /**
      * Overwrite the base class to display the data for this field

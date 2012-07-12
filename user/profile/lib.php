@@ -23,314 +23,7 @@
 
 require_once($CFG->libdir . '/custominfo/lib.php');
 
-/**
- * Base class for the customisable profile fields.
- *
- * @package core_user
- * @copyright  2007 onwards Shane Elliot {@link http://pukunui.com}
- * @license http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
- */
-abstract class profile_field_base extends custominfo_field_base {
-
-    protected $objectname = 'user';
-    protected $capability = 'moodle/user:update';
-
-    /**
-     * Abstract method: Adds the profile field to the moodle form class
-     * @abstract The following methods must be overwritten by child classes
-     * @param moodleform $mform instance of the moodleform class
-     */
-    public function edit_field_add($mform) {
-        print_error('mustbeoveride', 'debug', '', 'edit_field_add');
-    }
-
-    /**
-     * Display the data for this field
-     * @return string
-     */
-    public function display_data() {
-        $options = new stdClass();
-        $options->para = false;
-        return format_text($this->data, FORMAT_MOODLE, $options);
-    }
-
-    /**
-     * Print out the form field in the edit profile page
-     * @param moodleform $mform instance of the moodleform class
-     * @return bool
-     */
-    public function edit_field($mform) {
-        if ($this->field->visible != PROFILE_VISIBLE_NONE
-          or has_capability('moodle/user:update', context_system::instance())) {
-
-            $this->edit_field_add($mform);
-            $this->edit_field_set_default($mform);
-            $this->edit_field_set_required($mform);
-            return true;
-        }
-        return false;
-    }
-
-    /**
-     * Tweaks the edit form
-     * @param moodleform $mform instance of the moodleform class
-     * @return bool
-     */
-    public function edit_after_data($mform) {
-        if ($this->field->visible != PROFILE_VISIBLE_NONE
-          or has_capability('moodle/user:update', context_system::instance())) {
-            $this->edit_field_set_locked($mform);
-            return true;
-        }
-        return false;
-    }
-
-    /**
-     * Saves the data coming from form
-     * @param stdClass $usernew data coming from the form
-     * @return mixed returns data id if success of db insert/update, false on fail, 0 if not permitted
-     */
-    public function edit_save_data($usernew) {
-        global $DB;
-
-        if (!isset($usernew->{$this->inputname})) {
-            // Field not present in form, probably locked and invisible - skip it.
-            return;
-        }
-
-        $data = new stdClass();
-
-        $usernew->{$this->inputname} = $this->edit_save_data_preprocess($usernew->{$this->inputname}, $data);
-
-        $data->objectname = 'user';
-        $data->objectid = $usernew->id;
-        $data->fieldid = $this->field->id;
-        $data->data    = $usernew->{$this->inputname};
-
-        if ($dataid = $DB->get_field('custom_info_data', 'id', array('objectid' => $data->objectid, 'fieldid' => $data->fieldid))) {
-            $data->id = $dataid;
-            $DB->update_record('custom_info_data', $data);
-        } else {
-            $DB->insert_record('custom_info_data', $data);
-        }
-    }
-
-    /**
-     * Validate the form field from profile page
-     *
-     * @param stdClass $usernew
-     * @return  string  contains error message otherwise null
-     */
-    public function edit_validate_field($usernew) {
-        global $DB;
-
-        $errors = array();
-        // Get input value.
-        if (isset($usernew->{$this->inputname})) {
-            if (is_array($usernew->{$this->inputname}) && isset($usernew->{$this->inputname}['text'])) {
-                $value = $usernew->{$this->inputname}['text'];
-            } else {
-                $value = $usernew->{$this->inputname};
-            }
-        } else {
-            $value = '';
-        }
-
-        // Check for uniqueness of data if required.
-        if ($this->is_unique() && (($value !== '') || $this->is_required())) {
-            $data = $DB->get_records_sql('
-                    SELECT id, objectid
-                      FROM {custom_info_data}
-                     WHERE fieldid = ?
-                       AND ' . $DB->sql_compare_text('data', 255) . ' = ' . $DB->sql_compare_text('?', 255),
-                    array($this->field->id, $value));
-            if ($data) {
-                $existing = false;
-                foreach ($data as $v) {
-                    if ($v->objectid == $usernew->id) {
-                        $existing = true;
-                        break;
-                    }
-                }
-                if (!$existing) {
-                    $errors[$this->inputname] = get_string('valuealreadyused');
-                }
-            }
-        }
-        return $errors;
-    }
-
-    /**
-     * Sets the default data for the field in the form object
-     * @param  moodleform $mform instance of the moodleform class
-     */
-    public function edit_field_set_default($mform) {
-        if (!empty($default)) {
-            $mform->setDefault($this->inputname, $this->field->defaultdata);
-        }
-    }
-
-    /**
-     * Sets the required flag for the field in the form object
-     *
-     * @param moodleform $mform instance of the moodleform class
-     */
-    public function edit_field_set_required($mform) {
-        global $USER;
-        if ($this->is_required() && ($this->userid == $USER->id || isguestuser())) {
-            $mform->addRule($this->inputname, get_string('required'), 'required', null, 'client');
-        }
-    }
-
-    /**
-     * HardFreeze the field if locked.
-     * @param moodleform $mform instance of the moodleform class
-     */
-    public function edit_field_set_locked($mform) {
-        if (!$mform->elementExists($this->inputname)) {
-            return;
-        }
-        if ($this->is_locked() and !has_capability('moodle/user:update', context_system::instance())) {
-            $mform->hardFreeze($this->inputname);
-            $mform->setConstant($this->inputname, $this->data);
-        }
-    }
-
-    /**
-     * Hook for child classess to process the data before it gets saved in database
-     * @param stdClass $data
-     * @param stdClass $datarecord The object that will be used to save the record
-     * @return  mixed
-     */
-    public function edit_save_data_preprocess($data, $datarecord) {
-        return $data;
-    }
-
-    /**
-     * Loads a user object with data for this field ready for the edit profile
-     * form
-     * @param stdClass $user a user object
-     */
-    public function edit_load_user_data($user) {
-        if ($this->data !== null) {
-            $user->{$this->inputname} = $this->data;
-        }
-    }
-
-    /**
-     * Check if the field data should be loaded into the user object
-     * By default it is, but for field types where the data may be potentially
-     * large, the child class should override this and return false
-     * @return bool
-     */
-    public function is_user_object_data() {
-        return true;
-    }
-
-    /**
-     * Accessor method: set the userid for this instance
-     * @internal This method should not generally be overwritten by child classes.
-     * @param integer $userid id from the user table
-     */
-    public function set_userid($userid) {
-        $this->userid = $userid;
-    }
-
-    /**
-     * Accessor method: set the fieldid for this instance
-     * @internal This method should not generally be overwritten by child classes.
-     * @param integer $fieldid id from the user_info_field table
-     */
-    public function set_fieldid($fieldid) {
-        $this->fieldid = $fieldid;
-    }
-
-    /**
-     * Accessor method: Load the field record and user data associated with the
-     * object's fieldid and userid
-     * @internal This method should not generally be overwritten by child classes.
-     */
-    public function load_data() {
-        global $DB;
-
-        // Load the field object.
-        if (($this->fieldid == 0) or (!($field = $DB->get_record('custom_info_field',
-                array('objectname' => 'user', 'id' => $this->fieldid))))) {
-            $this->field = null;
-            $this->inputname = '';
-        } else {
-            $this->field = $field;
-            $this->inputname = 'profile_field_'.$field->shortname;
-        }
-
-        if (!empty($this->field)) {
-            $params = array('objectid' => $this->userid, 'fieldid' => $this->fieldid);
-            if ($data = $DB->get_record('custom_info_data', $params, 'data, dataformat')) {
-                $this->data = $data->data;
-                $this->dataformat = $data->dataformat;
-            } else {
-                $this->data = $this->field->defaultdata;
-                $this->dataformat = FORMAT_HTML;
-            }
-        } else {
-            $this->data = null;
-        }
-    }
-
-    // for compatibility with PHP4 code in sub-classes
-    public function profile_field_base($fieldid=0, $objectid=0) {
-        parent::__construct($fieldid, $objectid);
-    }
-
-    /**
-     * Check if the field data is visible to the current user
-     * @internal This method should not generally be overwritten by child classes.
-     * @return bool
-     */
-    public function is_visible() {
-        global $USER;
-
-        switch ($this->field->visible) {
-            case CUSTOMINFO_VISIBLE_ALL:
-                return true;
-            case CUSTOMINFO_VISIBLE_PRIVATE:
-                if ($this->objectid == $USER->id) {
-                    return true;
-                } else {
-                    return has_capability('moodle/user:viewalldetails',
-                            context_user::instance($this->objectid));
-                }
-            case CUSTOMINFO_VISIBLE_NONE:
-            default:
-                return has_capability($this->capability, context_user::instance($this->objectid));
-        }
-    }
-} /// End of class definition
-
-
 /***** General purpose functions for customisable user profiles *****/
-
-/**
- * Create a new instance of a child class of custominfo_field_base.
- *
- * @TODO This temporary function will migrate into a generic custominfo function.
- *       Then it will use a local implementation of custominfo_field_extension placed in (user|course)/custominfo/locallib.php.
- *
- * @param object $fieldtype  The custominfo field type
- * @param object $fieldid    (opt) The field id
- * @param integer $objectid  (opt) The objectid to fill the field from
- * @return custominfo_field_base
- */
-function profile_field_factory($fieldtype, $fieldid=0, $objectid=0) {
-    global $CFG;
-    require_once($CFG->libdir.'/custominfo/field/'.$fieldtype.'/field.class.php');
-    $newfield = 'profile_field_'.$fieldtype;
-    if (empty($fieldid)) {
-        return (new $newfield());
-    } else {
-        return (new $newfield($fieldid, $objectid));
-    }
-}
 
 function profile_load_data($user) {
     global $DB;
@@ -338,7 +31,7 @@ function profile_load_data($user) {
     $fields = $DB->get_records('custom_info_field', array('objectname' => 'user'));
     if ($fields) {
         foreach ($fields as $field) {
-            $formfield = profile_field_factory($field->datatype, $field->id, $user->id);
+            $formfield = custominfo_field_factory("user", $field->datatype, $field->id, $user->id);
             $formfield->edit_load_object_data($user);
         }
     }
@@ -373,7 +66,7 @@ function profile_definition($mform, $userid = 0) {
                 if ($display or $update) {
                     $mform->addElement('header', 'category_'.$category->id, format_string($category->name));
                     foreach ($fields as $field) {
-                        $formfield = profile_field_factory($field->datatype, $field->id);
+                        $formfield = custominfo_field_factory("user", $field->datatype, $field->id);
                         $formfield->edit_field($mform);
                     }
                 }
@@ -395,7 +88,7 @@ function profile_definition_after_data($mform, $userid) {
     $fields = $DB->get_records('custom_info_field', array('objectname' => 'user'));
     if ($fields) {
         foreach ($fields as $field) {
-            $formfield = profile_field_factory($field->datatype, $field->id, $userid);
+            $formfield = custominfo_field_factory("user", $field->datatype, $field->id, $userid);
             $formfield->edit_after_data($mform);
         }
     }
@@ -414,7 +107,7 @@ function profile_validation($usernew, $files) {
     $fields = $DB->get_records('custom_info_field', array('objectname' => 'user'));
     if ($fields) {
         foreach ($fields as $field) {
-            $formfield = profile_field_factory($field->datatype, $field->id, $usernew->id);
+            $formfield = custominfo_field_factory("user", $field->datatype, $field->id, $usernew->id);
             $err += $formfield->edit_validate_field($usernew, $files);
         }
     }
@@ -431,7 +124,7 @@ function profile_save_data($usernew) {
     $fields = $DB->get_records('custom_info_field', array('objectname' => 'user'));
     if ($fields) {
         foreach ($fields as $field) {
-            $formfield = profile_field_factory($field->datatype, $field->id, $usernew->id);
+            $formfield = custominfo_field_factory("user", $field->datatype, $field->id, $usernew->id);
             $formfield->edit_save_data($usernew);
         }
     }
@@ -450,7 +143,7 @@ function profile_display_fields($userid) {
             $fields = $DB->get_records('custom_info_field', array('categoryid' => $category->id), 'sortorder ASC');
             if ($fields) {
                 foreach ($fields as $field) {
-                    $formfield = profile_field_factory($field->datatype, $field->id, $userid);
+                    $formfield = custominfo_field_factory("user", $field->datatype, $field->id, $userid);
                     if ($formfield->is_visible() and !$formfield->is_empty()) {
                         echo html_writer::tag('dt', format_string($formfield->field->name));
                         echo html_writer::tag('dd', $formfield->display_data());
@@ -486,7 +179,7 @@ function profile_signup_fields($mform) {
                  $currentcat = $field->categoryid;
                  $mform->addElement('header', 'category_'.$field->categoryid, format_string($field->categoryname));
             }
-            $formfield = profile_field_factory($field->datatype, $field->fieldid);
+            $formfield = custominfo_field_factory("user", $field->datatype, $field->fieldid);
             $formfield->edit_field($mform);
         }
     }
@@ -505,7 +198,7 @@ function profile_user_record($userid) {
     $fields = $DB->get_records('custom_info_field', array('objectname' => 'user'));
     if ($fields) {
         foreach ($fields as $field) {
-            $formfield = profile_field_factory($field->datatype, $field->id, $userid);
+            $formfield = custominfo_field_factory("user", $field->datatype, $field->id, $userid);
             if ($formfield->is_object_data()) {
                 $usercustomfields->{$field->shortname} = $formfield->data;
             }

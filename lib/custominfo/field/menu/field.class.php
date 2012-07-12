@@ -28,7 +28,7 @@
  * @copyright  2007 onwards Shane Elliot {@link http://pukunui.com}
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
-class profile_field_menu extends profile_field_base {
+class profile_field_menu extends custominfo_field_base {
 
     /** @var array $options */
     public $options;
@@ -41,12 +41,13 @@ class profile_field_menu extends profile_field_base {
      *
      * Pulls out the options for the menu from the database and sets the the corresponding key for the data if it exists.
      *
-     * @param int $fieldid
-     * @param int $userid
+     * @param string $objectname The model has uses custominfo (e.g. user, course)
+     * @param integer $fieldid    id of the profile from the custom_info_field table
+     * @param integer $objectid   id of the object whose we are displaying data
      */
-    public function profile_field_menu($fieldid = 0, $userid = 0) {
-        // First call parent constructor.
-        $this->profile_field_base($fieldid, $userid);
+    public function __construct($objectname, $fieldid=0, $objectid=0) {
+        //first call parent constructor
+        parent::__construct($objectname, $fieldid, $objectid);
 
         // Param 1 for menu type is the options.
         if (isset($this->field->param1)) {
@@ -106,15 +107,15 @@ class profile_field_menu extends profile_field_base {
     }
 
     /**
-     * When passing the user object to the form class for the edit profile page
+     * When passing the object to the form class for the edit profile page
      * we should load the key for the saved data
      *
      * Overwrites the base class method.
      *
-     * @param stdClass $user User object.
+     * @param   object   model object (e.g. user, course)
      */
-    public function edit_load_object_data($user) {
-        $user->{$this->inputname} = $this->datakey;
+    public function edit_load_object_data($model) {
+        $model->{$this->inputname} = $this->datakey;
     }
 
     /**
@@ -125,7 +126,7 @@ class profile_field_menu extends profile_field_base {
         if (!$mform->elementExists($this->inputname)) {
             return;
         }
-        if ($this->is_locked() and !has_capability('moodle/user:update', context_system::instance())) {
+        if ($this->is_locked() and !has_capability($this->capability, context_system::instance())) {
             $mform->hardFreeze($this->inputname);
             $mform->setConstant($this->inputname, $this->datakey);
         }
