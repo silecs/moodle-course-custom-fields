@@ -3,67 +3,7 @@ global $CFG;
 
 require_once($CFG->libdir . '/custominfo/lib.php');
 
-/**
- * Base class for the customisable profile fields.
- */
-abstract class profile_field_base extends custominfo_field_base {
-
-    protected $objectname = 'user';
-    protected $capability = 'moodle/user:update';
-
-    // for compatibility with PHP4 code in sub-classes
-    public function profile_field_base($fieldid=0, $objectid=0) {
-        parent::__construct($fieldid, $objectid);
-    }
-
-    /**
-     * Check if the field data is visible to the current user
-     * @return  boolean
-     */
-    public function is_visible() {
-        global $USER;
-
-        switch ($this->field->visible) {
-            case CUSTOMINFO_VISIBLE_ALL:
-                return true;
-            case CUSTOMINFO_VISIBLE_PRIVATE:
-                if ($this->objectid == $USER->id) {
-                    return true;
-                } else {
-                    return has_capability('moodle/user:viewalldetails',
-                            get_context_instance(CONTEXT_USER, $this->objectid));
-                }
-            case CUSTOMINFO_VISIBLE_NONE:
-            default:
-                return has_capability($this->capability, get_context_instance(CONTEXT_USER, $this->objectid));
-        }
-    }
-} /// End of class definition
-
-
 /***** General purpose functions for customisable user profiles *****/
-
-/**
- * Create a new instance of a child class of custominfo_field_base.
- *
- * @TODO This temporary function will migrate into a generic custominfo function.
- *       Then it will use a local implementation of custominfo_field_extension placed in (user|course)/custominfo/locallib.php.
- *
- * @param object $fieldtype  The custominfo field type
- * @param object $fieldid    (opt) The field id
- * @param integer $objectid  (opt) The objectid to fill the field from
- * @return custominfo_field_base
- */
-function profile_field_factory($fieldtype, $fieldid=0, $objectid=0) {
-    global $CFG;
-    require_once($CFG->libdir.'/custominfo/field/'.$fieldtype.'/field.class.php');
-    $newfield = 'profile_field_'.$fieldtype;
-    if (empty($fieldid)) {
-        return (new $newfield());
-    } else {
-        return (new $newfield($fieldid, $objectid));
-    }
-}
 
 function profile_load_data($user) {
     global $DB;
@@ -71,7 +11,7 @@ function profile_load_data($user) {
     $fields = $DB->get_records('custom_info_field', array('objectname' => 'user'));
     if ($fields) {
         foreach ($fields as $field) {
-            $formfield = profile_field_factory($field->datatype, $field->id, $user->id);
+            $formfield = custominfo_field_factory("user", $field->datatype, $field->id, $user->id);
             $formfield->edit_load_object_data($user);
         }
     }
@@ -104,7 +44,7 @@ function profile_definition($mform) {
                 if ($display or $update) {
                     $mform->addElement('header', 'category_'.$category->id, format_string($category->name));
                     foreach ($fields as $field) {
-                        $formfield = profile_field_factory($field->datatype, $field->id);
+                        $formfield = custominfo_field_factory("user", $field->datatype, $field->id);
                         $formfield->edit_field($mform);
                     }
                 }
@@ -121,7 +61,7 @@ function profile_definition_after_data($mform, $userid) {
     $fields = $DB->get_records('custom_info_field', array('objectname' => 'user'));
     if ($fields) {
         foreach ($fields as $field) {
-            $formfield = profile_field_factory($field->datatype, $field->id, $userid);
+            $formfield = custominfo_field_factory("user", $field->datatype, $field->id, $userid);
             $formfield->edit_after_data($mform);
         }
     }
@@ -134,7 +74,7 @@ function profile_validation($usernew, $files) {
     $fields = $DB->get_records('custom_info_field', array('objectname' => 'user'));
     if ($fields) {
         foreach ($fields as $field) {
-            $formfield = profile_field_factory($field->datatype, $field->id, $usernew->id);
+            $formfield = custominfo_field_factory("user", $field->datatype, $field->id, $usernew->id);
             $err += $formfield->edit_validate_field($usernew, $files);
         }
     }
@@ -147,7 +87,7 @@ function profile_save_data($usernew) {
     $fields = $DB->get_records('custom_info_field', array('objectname' => 'user'));
     if ($fields) {
         foreach ($fields as $field) {
-            $formfield = profile_field_factory($field->datatype, $field->id, $usernew->id);
+            $formfield = custominfo_field_factory("user", $field->datatype, $field->id, $usernew->id);
             $formfield->edit_save_data($usernew);
         }
     }
@@ -162,7 +102,7 @@ function profile_display_fields($userid) {
             $fields = $DB->get_records('custom_info_field', array('categoryid' => $category->id), 'sortorder ASC');
             if ($fields) {
                 foreach ($fields as $field) {
-                    $formfield = profile_field_factory($field->datatype, $field->id, $userid);
+                    $formfield = custominfo_field_factory("user", $field->datatype, $field->id, $userid);
                     if ($formfield->is_visible() and !$formfield->is_empty()) {
                         print_row(format_string($formfield->field->name.':'), $formfield->display_data());
                     }
@@ -197,7 +137,7 @@ function profile_signup_fields($mform) {
                  $currentcat = $field->categoryid;
                  $mform->addElement('header', 'category_'.$field->categoryid, format_string($field->categoryname));
             }
-            $formfield = profile_field_factory($field->datatype, $field->fieldid);
+            $formfield = custominfo_field_factory("user", $field->datatype, $field->fieldid);
             $formfield->edit_field($mform);
         }
     }
@@ -216,7 +156,7 @@ function profile_user_record($userid) {
     $fields = $DB->get_records('custom_info_field', array('objectname' => 'user'));
     if ($fields) {
         foreach ($fields as $field) {
-            $formfield = profile_field_factory($field->datatype, $field->id, $userid);
+            $formfield = custominfo_field_factory("user", $field->datatype, $field->id, $userid);
             if ($formfield->is_object_data()) {
                 $usercustomfields->{$field->shortname} = $formfield->data;
             }

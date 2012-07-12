@@ -1,6 +1,6 @@
 <?php
 
-class profile_field_menu extends profile_field_base {
+class profile_field_menu extends custominfo_field_base {
     var $options;
     var $datakey;
 
@@ -8,10 +8,13 @@ class profile_field_menu extends profile_field_base {
      * Constructor method.
      * Pulls out the options for the menu from the database and sets the
      * the corresponding key for the data if it exists
+     * @param string $objectname The model has uses custominfo (e.g. user, course)
+     * @param integer $fieldid    id of the profile from the custom_info_field table
+     * @param integer $objectid   id of the object whose we are displaying data
      */
-    function profile_field_menu($fieldid=0, $userid=0) {
+    function __construct($objectname, $fieldid=0, $objectid=0) {
         //first call parent constructor
-        $this->profile_field_base($fieldid, $userid);
+        parent::__construct($objectname, $fieldid, $objectid);
 
         /// Param 1 for menu type is the options
         $options = explode("\n", $this->field->param1);
@@ -63,13 +66,13 @@ class profile_field_menu extends profile_field_base {
     }
 
     /**
-     * When passing the user object to the form class for the edit profile page
+     * When passing the object to the form class for the edit profile page
      * we should load the key for the saved data
      * Overwrites the base class method
-     * @param   object   user object
+     * @param   object   model object (e.g. user, course)
      */
-    function edit_load_object_data($user) {
-        $user->{$this->inputname} = $this->datakey;
+    function edit_load_object_data($model) {
+        $model->{$this->inputname} = $this->datakey;
     }
 
     /**
@@ -80,7 +83,7 @@ class profile_field_menu extends profile_field_base {
         if (!$mform->elementExists($this->inputname)) {
             return;
         }
-        if ($this->is_locked() and !has_capability('moodle/user:update', get_context_instance(CONTEXT_SYSTEM))) {
+        if ($this->is_locked() and !has_capability($this->capability, get_context_instance(CONTEXT_SYSTEM))) {
             $mform->hardFreeze($this->inputname);
             $mform->setConstant($this->inputname, $this->datakey);
         }

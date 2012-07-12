@@ -24,6 +24,8 @@
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 
+global $CFG;
+require_once($CFG->libdir . '/custominfo/lib.php');
 
 /**
  * Creates a user
@@ -275,7 +277,7 @@ function user_get_user_details($user, $course = null, array $userfields = array(
                                         ORDER BY c.sortorder ASC, f.sortorder ASC");
         $userdetails['customfields'] = array();
         foreach ($fields as $field) {
-            $formfield = profile_field_factory($field->datatype, $field->id, $user->id);
+            $formfield = custominfo_field_factory('user', $field->datatype, $field->id, $user->id);
             if ($formfield->is_visible() and !$formfield->is_empty()) {
                 $userdetails['customfields'][] =
                     array('name' => $formfield->field->name, 'value' => $formfield->data,

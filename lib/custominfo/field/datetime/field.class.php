@@ -8,7 +8,7 @@
  * @version 20101022
  */
 
-class profile_field_datetime extends profile_field_base {
+class profile_field_datetime extends custominfo_field_base {
 
     /**
      * Handles editing datetime fields
