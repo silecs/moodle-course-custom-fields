@@ -1,6 +1,6 @@
 <?php
 
-class profile_field_text extends profile_field_base {
+class profile_field_text extends custominfo_field_base {
 
     /**
      * Overwrite the base class to display the data for this field

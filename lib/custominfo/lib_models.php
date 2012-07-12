@@ -400,7 +400,7 @@ class custominfo_field extends custominfo_record {
             return self::EDIT_CANCELLED;
         } else {
             if ($data = $form->get_data()) {
-                $formfield = profile_field_factory($datatype);
+                $formfield = custiominfo_field_factory($this->objectname, $datatype);
 
                 // Collect the description and format back into the proper data structure from the editor
                 // Note: This field will ALWAYS be an editor

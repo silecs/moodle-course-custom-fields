@@ -1,6 +1,6 @@
 <?php
 
-class profile_field_textarea extends profile_field_base {
+class profile_field_textarea extends custominfo_field_base {
 
     function edit_field_add($mform) {
         /// Create the form field
@@ -9,7 +9,7 @@ class profile_field_textarea extends profile_field_base {
     }
 
     /// Overwrite base class method, data in this field type is potentially too large to be
-    /// included in the user object
+    /// included in the model object
     function is_object_data() {
         return false;
     }
@@ -22,10 +22,10 @@ class profile_field_textarea extends profile_field_base {
         return $data;
     }
 
-    function edit_load_object_data($user) {
+    function edit_load_object_data($model) {
         if ($this->data !== NULL) {
             $this->data = clean_text($this->data, $this->dataformat);
-            $user->{$this->inputname} = array('text'=>$this->data, 'format'=>$this->dataformat);
+            $model->{$this->inputname} = array('text'=>$this->data, 'format'=>$this->dataformat);
         }
     }
 
