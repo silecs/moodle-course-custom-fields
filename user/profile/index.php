@@ -70,7 +70,7 @@ echo '<hr />';
 echo '<div class="profileeditor">';
 
 /// Create a new field link
-$options = profile_list_datatypes();
+$options = custominfo_field::list_datatypes();
 $popupurl = new moodle_url('/user/profile/index.php?id=0&action=editfield');
 echo $OUTPUT->single_select($popupurl, 'datatype', $options, '', array(''=>$strcreatefield), 'newfieldform');
 
