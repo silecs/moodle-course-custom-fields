@@ -2,6 +2,7 @@
 
 require('../../config.php');
 require_once($CFG->libdir.'/adminlib.php');
+require_once($CFG->libdir.'/custominfo/lib_controller.php');
 require_once($CFG->dirroot.'/user/profile/lib.php');
 require_once($CFG->dirroot.'/user/profile/definelib.php');
 
@@ -17,72 +18,10 @@ $strdefaultcategory = get_string('profiledefaultcategory', 'admin');
 $strnofields        = get_string('profilenofieldsdefined', 'admin');
 $strcreatefield     = get_string('profilecreatefield', 'admin');
 
+$controller = new custominfo_controller('user');
 
-/// Do we have any actions to perform before printing the header
-
-switch ($action) {
-    case 'movecategory':
-        $id  = required_param('id', PARAM_INT);
-        $dir = required_param('dir', PARAM_ALPHA);
-
-        if (confirm_sesskey()) {
-            profile_move_category($id, $dir);
-        }
-        redirect($redirect);
-        break;
-    case 'movefield':
-        $id  = required_param('id', PARAM_INT);
-        $dir = required_param('dir', PARAM_ALPHA);
-
-        if (confirm_sesskey()) {
-            profile_move_field($id, $dir);
-        }
-        redirect($redirect);
-        break;
-    case 'deletecategory':
-        $id      = required_param('id', PARAM_INT);
-        profile_delete_category($id);
-        redirect($redirect,get_string('deleted'));
-        break;
-    case 'deletefield':
-        $id      = required_param('id', PARAM_INT);
-        $confirm = optional_param('confirm', 0, PARAM_BOOL);
-
-        $datacount = $DB->count_records('custom_info_data', array('fieldid' => $id));
-        if (data_submitted() and ($confirm and confirm_sesskey()) or $datacount===0) {
-            profile_delete_field($id);
-            redirect($redirect,get_string('deleted'));
-        }
-
-        //ask for confirmation
-        $fieldname = $DB->get_field('custom_info_field', 'name', array('id' => $id));
-        $optionsyes = array ('id'=>$id, 'confirm'=>1, 'action'=>'deletefield', 'sesskey'=>sesskey());
-        $strheading = get_string('profiledeletefield', 'admin', $fieldname);
-        $PAGE->navbar->add($strheading);
-        echo $OUTPUT->header();
-        echo $OUTPUT->heading($strheading);
-        $formcontinue = new single_button(new moodle_url($redirect, $optionsyes), get_string('yes'), 'post');
-        $formcancel = new single_button(new moodle_url($redirect), get_string('no'), 'get');
-        echo $OUTPUT->confirm(get_string('profileconfirmfielddeletion', 'admin', $datacount), $formcontinue, $formcancel);
-        echo $OUTPUT->footer();
-        die;
-        break;
-    case 'editfield':
-        $id       = optional_param('id', 0, PARAM_INT);
-        $datatype = optional_param('datatype', '', PARAM_ALPHA);
-
-        profile_edit_field($id, $datatype, $redirect);
-        die;
-        break;
-    case 'editcategory':
-        $id = optional_param('id', 0, PARAM_INT);
-
-        profile_edit_category($id, $redirect);
-        die;
-        break;
-    default:
-        //normal form
-}
+/// Do we have any actions to perform before printing the header?
+$controller->dispatch_action($action, $redirect);
 
 /// Check that we have at least one category defined
 if ($DB->count_records('custom_info_category', array('objectname' => 'user')) == 0) {
