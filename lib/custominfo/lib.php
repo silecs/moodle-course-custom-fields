@@ -44,6 +44,7 @@ abstract class custominfo_field_base {
         global $CFG;
         $modelclass = 'custominfo_field_extension_' . $objectname;
         require_once($CFG->dirroot.'/'.$objectname.'/custominfo/locallib.php');
+        $this->objectname = $objectname;
         $this->extension = new $modelclass();
         $this->capability = $this->extension->get_capability();
         $this->set_fieldid($fieldid);
