@@ -181,7 +181,7 @@ class custominfo_category extends custominfo_record {
 
         /// Finally we get to delete the category
         $DB->delete_records('custom_info_category', array('objectname' => $this->objectname, 'id' => $this->record->id));
-        profile_reorder_categories();
+        $this->reorder();
         return true;
     }
 

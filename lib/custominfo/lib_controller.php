@@ -114,7 +114,7 @@ class custominfo_controller {
                 redirect($redirect);
             case custominfo_field::EDIT_DISPLAY:
 
-            $datatypes = profile_list_datatypes();
+            $datatypes = custominfo_field::list_datatypes();
 
             if (empty($id)) {
                 $strheading = get_string('profilecreatenewfield', 'admin', $datatypes[$datatype]);
