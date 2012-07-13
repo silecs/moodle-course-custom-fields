@@ -8,7 +8,7 @@
  * @version 20101022
  */
 
-class profile_define_datetime extends profile_define_base {
+class profile_define_datetime extends custominfo_define_base {
 
     /**
      * Define the setting for a datetime custom field

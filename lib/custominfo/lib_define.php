@@ -4,8 +4,15 @@
  * This class defines the form that each field type will extend.
  */
 abstract class custominfo_define_base {
-    // must be overriden
     protected $objectname;
+
+    /**
+     * Constructor
+     * @param string $objectname
+     */
+    public function __construct($objectname) {
+        $this->objectname = $objectname;
+    }
 
     /**
      * Prints out the form snippet for creating or editing a profile field
@@ -108,12 +115,12 @@ abstract class custominfo_define_base {
             if ($field and $field->id <> $data->id) {
                 $err['shortname'] = get_string('profileshortnamenotunique', 'admin');
             }
-        /// Check the shortname is unique
-            if (!empty($field->categoryid)) {
-                $category = $DB->get_record('custom_info_category', array('id' => $field->categoryid));
-                if ($category->objectname != $this->objectname) {
-                    $err['category'] = get_string('invalidcategoryid', 'core_error');
-                }
+        /// Check the category exists
+            if (!empty($data->categoryid)) {
+                $category = $DB->get_record('custom_info_category', array('id' => $data->categoryid));
+            }
+            if (empty($category) || $category->objectname != $this->objectname) {
+                $err['categoryid'] = get_string('invalidcategoryid', 'core_error');
             }
 
             //NOTE: since 2.0 the shortname may collide with existing fields in $USER because we load these fields into $USER->profile array instead

@@ -1,6 +1,6 @@
 <?php
 
-class profile_define_menu extends profile_define_base {
+class profile_define_menu extends custominfo_define_base {
 
     function define_form_specific($form) {
         /// Param 1 for menu type contains the options

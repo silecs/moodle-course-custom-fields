@@ -1,6 +1,6 @@
 <?php
 
-class profile_define_checkbox extends profile_define_base {
+class profile_define_checkbox extends custominfo_define_base {
 
     function define_form_specific($form) {
         /// select whether or not this should be checked by default
