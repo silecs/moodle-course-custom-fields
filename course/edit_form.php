@@ -5,6 +5,7 @@ defined('MOODLE_INTERNAL') || die;
 require_once($CFG->libdir.'/formslib.php');
 require_once($CFG->libdir.'/completionlib.php');
 require_once($CFG->libdir. '/coursecatlib.php');
+require_once($CFG->libdir.'/custominfo/lib.php');
 
 /**
  * The form for handling editing a course.
@@ -12,6 +13,10 @@ require_once($CFG->libdir. '/coursecatlib.php');
 class course_edit_form extends moodleform {
     protected $course;
     protected $context;
+    /**
+     * @var custominfo_form_extension
+     */
+    protected $custominfo;
 
     /**
      * Form definition.
@@ -296,6 +301,11 @@ class course_edit_form extends moodleform {
             }
         }
 
+        // Next the customisable fields
+        $this->custominfo = new custominfo_form_extension('course');
+        $canviewall = has_capability('moodle/course:update', get_context_instance(CONTEXT_SYSTEM));
+        $this->custominfo->definition($mform, $canviewall);
+
         $this->add_action_buttons();
 
         $mform->addElement('hidden', 'id', null);
@@ -312,9 +322,10 @@ class course_edit_form extends moodleform {
         global $DB;
 
         $mform = $this->_form;
+        $courseid = $mform->getElementValue('id');
 
         // add available groupings
-        if ($courseid = $mform->getElementValue('id') and $mform->elementExists('defaultgroupingid')) {
+        if ($courseid and $mform->elementExists('defaultgroupingid')) {
             $options = array();
             if ($groupings = $DB->get_records('groupings', array('courseid'=>$courseid))) {
                 foreach ($groupings as $grouping) {
@@ -325,6 +336,9 @@ class course_edit_form extends moodleform {
             $gr_el =& $mform->getElement('defaultgroupingid');
             $gr_el->load($options);
         }
+
+        // Next the customisable fields
+        $this->custominfo->definition_after_data($mform, $courseid);
 
         // add course format options
         $formatvalue = $mform->getElementValue('format');
@@ -367,7 +381,11 @@ class course_edit_form extends moodleform {
             }
         }
 
-        $errors = array_merge($errors, enrol_course_edit_validation($data, $this->context));
+        $errors = array_merge(
+                $errors,
+                enrol_course_edit_validation($data, $this->context),
+                $this->custominfo->validation((object)$data, $files)
+        );
 
         $courseformat = course_get_format((object)array('format' => $data['format']));
         $formaterrors = $courseformat->edit_form_validation($data, $files, $errors);
