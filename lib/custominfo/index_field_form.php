@@ -17,10 +17,10 @@ class field_form extends moodleform {
         $mform =& $this->_form;
 
         /// Everything else is dependant on the data type
-        $datatype = $this->_customdata;
+        $datatype = $this->_customdata['datatype'];
         require_once(__DIR__.'/field/'.$datatype.'/define.class.php');
         $newfield = 'profile_define_'.$datatype;
-        $this->field = new $newfield();
+        $this->field = new $newfield($this->_customdata['objectname']);
 
         $strrequired = get_string('required');
 
