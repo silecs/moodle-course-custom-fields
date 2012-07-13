@@ -6,9 +6,12 @@ if (!defined('MOODLE_INTERNAL')) {
 
 require_once($CFG->dirroot.'/lib/formslib.php');
 
+/**
+ * This class declares the form that describes a custominfo field.
+ */
 class field_form extends moodleform {
 
-    var $field;
+    public $field;
 
 /// Define the form
     function definition () {

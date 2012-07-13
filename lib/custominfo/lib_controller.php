@@ -5,10 +5,21 @@ require_once(__DIR__.'/lib.php');
 class custominfo_controller {
     protected $objectname;
 
+    /**
+     * Constructor
+     * @param string $objectname E.g. "user" or "course"
+     */
     public function __construct($objectname) {
         $this->objectname = $objectname;
     }
 
+    /**
+     * Dispatch the action name and eventually redirects the browser
+     * @global object $DB
+     * @global object $OUTPUT
+     * @param string $action   Name of the action requested
+     * @param string $redirect URL to redirect after the action was performed
+     */
     public function dispatch_action($action, $redirect) {
         global $DB, $OUTPUT;
         switch ($action) {
@@ -76,6 +87,12 @@ class custominfo_controller {
         }
     }
 
+    /**
+     * Redirect or display the category form according to the data submitted
+     * @global object $OUTPUT
+     * @param integer $id
+     * @param string $redirect URL to redirect after the action was performed successfullly
+     */
     protected function edit_category($id, $redirect) {
         global $OUTPUT;
         $category = custominfo_category::type($this->objectname);
@@ -101,6 +118,12 @@ class custominfo_controller {
         }
     }
 
+    /**
+     * Redirect or display the field form according to the data submitted
+     * @global object $OUTPUT
+     * @param integer $id
+     * @param string $redirect URL to redirect after the action was performed successfullly
+     */
     protected function edit_field($id, $datatype, $redirect) {
         global $OUTPUT, $PAGE;
 

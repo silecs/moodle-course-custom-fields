@@ -6,12 +6,13 @@ if (!defined('MOODLE_INTERNAL')) {
 
 require_once($CFG->dirroot.'/lib/formslib.php');
 
+/**
+ * This class declares the form that describes a custominfo category.
+ */
 class category_form extends moodleform {
 
     // Define the form
     function definition () {
-        global $USER, $CFG;
-
         $mform =& $this->_form;
 
         $strrequired = get_string('required');
@@ -27,7 +28,6 @@ class category_form extends moodleform {
         $mform->addRule('name', $strrequired, 'required', null, 'client');
 
         $this->add_action_buttons(true);
-
     } /// End of function
 
 /// perform some moodle validation
