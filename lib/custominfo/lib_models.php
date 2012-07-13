@@ -255,7 +255,7 @@ class custominfo_category extends custominfo_record {
      */
     public function get_form() {
         if (empty($this->form)) {
-            $this->form = new category_form();
+            $this->form = new category_form(null, array('objectname' => $this->objectname));
 
             if ($this->id && $this->record) {
                 $this->form->set_data($this->record);
