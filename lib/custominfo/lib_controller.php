@@ -36,7 +36,7 @@ class custominfo_controller {
      * @param string $action   Name of the action requested
      */
     public function dispatch_action($action) {
-        global $DB, $OUTPUT;
+        global $DB, $OUTPUT, $PAGE;
         switch ($action) {
             case 'movecategory':
                 $id  = required_param('id', PARAM_INT);
@@ -226,7 +226,7 @@ class custominfo_controller {
      * @return  string   the icon string
      */
     protected function profile_category_icons($category) {
-        global $CFG, $USER, $DB, $OUTPUT;
+        global $CFG, $DB, $OUTPUT;
 
         $strdelete   = get_string('delete');
         $strmoveup   = get_string('moveup');
@@ -271,7 +271,7 @@ class custominfo_controller {
      * @return  string   the icon string
      */
     protected function profile_field_icons($field) {
-        global $CFG, $USER, $DB, $OUTPUT;
+        global $CFG, $DB, $OUTPUT;
 
         $strdelete   = get_string('delete');
         $strmoveup   = get_string('moveup');
