@@ -27,7 +27,7 @@
  * @copyright  2008 onwards Shane Elliot {@link http://pukunui.com}
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
-class profile_define_checkbox extends profile_define_base {
+class profile_define_checkbox extends custominfo_define_base {
 
     /**
      * Add elements for creating/editing a checkbox profile field.

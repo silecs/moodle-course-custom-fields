@@ -28,7 +28,7 @@
  * @copyright  2007 onwards Shane Elliot {@link http://pukunui.com}
  * @license   http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
-class profile_define_textarea extends profile_define_base {
+class profile_define_textarea extends custominfo_define_base {
 
     /**
      * Add elements for creating/editing a textarea profile field.
