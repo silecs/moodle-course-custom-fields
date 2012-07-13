@@ -35,6 +35,10 @@ require_once($CFG->dirroot.'/lib/formslib.php');
  * @license http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 class user_editadvanced_form extends moodleform {
+    /**
+     * @var custominfo_form_extension
+     */
+    protected $custominfo;
 
     /**
      * Define the form.
@@ -125,7 +129,9 @@ class user_editadvanced_form extends moodleform {
         useredit_shared_definition($mform, $editoroptions, $filemanageroptions);
 
         // Next the customisable profile fields.
-        profile_definition($mform, $userid);
+        $this->custominfo = new custominfo_form_extension('user');
+        $canviewall = has_capability('moodle/user:update', get_context_instance(CONTEXT_SYSTEM));
+        $this->custominfo->definition($mform, $canviewall);
 
         if ($userid == -1) {
             $btnstring = get_string('createuser');
@@ -216,7 +222,7 @@ class user_editadvanced_form extends moodleform {
         }
 
         // Next the customisable profile fields.
-        profile_definition_after_data($mform, $userid);
+        $this->custominfo->definition_after_data($mform, $userid);
     }
 
     /**
@@ -281,7 +287,7 @@ class user_editadvanced_form extends moodleform {
         }
 
         // Next the customisable profile fields.
-        $err += profile_validation($usernew, $files);
+        $err += $this->custominfo->validation($usernew, $files);
 
         if (count($err) == 0) {
             return true;
