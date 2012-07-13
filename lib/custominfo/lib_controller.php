@@ -117,6 +117,7 @@ class custominfo_controller {
             redirect($this->redirect);
         }
     }
+
     /**
      * Redirect or display the category form according to the data submitted
      * @global object $OUTPUT
@@ -181,5 +182,126 @@ class custominfo_controller {
             echo $OUTPUT->footer();
             die;
         }
+    }
+
+     /* Stricly speaking, the following methods shouldn't be in a controller but rather in a helper class. */
+
+    /**
+     * Print all the categories of this object type.
+     */
+    public function print_all_categories() {
+        global $DB, $OUTPUT;
+
+        $strnofields = get_string('profilenofieldsdefined', 'admin');
+        $categories = $DB->get_records('custom_info_category', array('objectname' => $this->objectname), 'sortorder ASC');
+
+        foreach ($categories as $category) {
+            $table = new html_table();
+            $table->head  = array(get_string('profilefield', 'admin'), get_string('edit'));
+            $table->align = array('left', 'right');
+            $table->width = '95%';
+            $table->attributes['class'] = 'generaltable profilefield';
+            $table->data = array();
+
+            $fields = $DB->get_records('custom_info_field', array('categoryid' => $category->id), 'sortorder ASC');
+            if ($fields) {
+                foreach ($fields as $field) {
+                    $table->data[] = array(format_string($field->name), $this->profile_field_icons($field));
+                }
+            }
+
+            echo $OUTPUT->heading(format_string($category->name) .' '.$this->profile_category_icons($category));
+            if (count($table->data)) {
+                echo html_writer::table($table);
+            } else {
+                echo $OUTPUT->notification($strnofields);
+            }
+
+        }
+    }
+
+    /**
+     * Create a string containing the editing icons for the user profile categories
+     * @param   object   the category object
+     * @return  string   the icon string
+     */
+    protected function profile_category_icons($category) {
+        global $CFG, $USER, $DB, $OUTPUT;
+
+        $strdelete   = get_string('delete');
+        $strmoveup   = get_string('moveup');
+        $strmovedown = get_string('movedown');
+        $stredit     = get_string('edit');
+
+        $categorycount = $DB->count_records('custom_info_category', array('objectname' => $this->objectname));
+        $fieldcount    = $DB->count_records('custom_info_field', array('categoryid' => $category->id));
+
+        /// Edit
+        $editstr = '<a title="'.$stredit.'" href="index.php?id='.$category->id.'&amp;action=editcategory"><img src="'.$OUTPUT->pix_url('t/edit') . '" alt="'.$stredit.'" class="iconsmall" /></a> ';
+
+        /// Delete
+        /// Can only delete the last category if there are no fields in it
+        if ( ($categorycount > 1) or ($fieldcount == 0) ) {
+            $editstr .= '<a title="'.$strdelete.'" href="index.php?id='.$category->id.'&amp;action=deletecategory';
+            $editstr .= '"><img src="'.$OUTPUT->pix_url('t/delete') . '" alt="'.$strdelete.'" class="iconsmall" /></a> ';
+        } else {
+            $editstr .= '<img src="'.$OUTPUT->pix_url('spacer') . '" alt="" class="iconsmall" /> ';
+        }
+
+        /// Move up
+        if ($category->sortorder > 1) {
+            $editstr .= '<a title="'.$strmoveup.'" href="index.php?id='.$category->id.'&amp;action=movecategory&amp;dir=up&amp;sesskey='.sesskey().'"><img src="'.$OUTPUT->pix_url('t/up') . '" alt="'.$strmoveup.'" class="iconsmall" /></a> ';
+        } else {
+            $editstr .= '<img src="'.$OUTPUT->pix_url('spacer') . '" alt="" class="iconsmall" /> ';
+        }
+
+        /// Move down
+        if ($category->sortorder < $categorycount) {
+            $editstr .= '<a title="'.$strmovedown.'" href="index.php?id='.$category->id.'&amp;action=movecategory&amp;dir=down&amp;sesskey='.sesskey().'"><img src="'.$OUTPUT->pix_url('t/down') . '" alt="'.$strmovedown.'" class="iconsmall" /></a> ';
+        } else {
+            $editstr .= '<img src="'.$OUTPUT->pix_url('spacer') . '" alt="" class="iconsmall" /> ';
+        }
+
+        return $editstr;
+    }
+
+    /**
+     * Create a string containing the editing icons for the user profile fields
+     * @param   object   the field object
+     * @return  string   the icon string
+     */
+    protected function profile_field_icons($field) {
+        global $CFG, $USER, $DB, $OUTPUT;
+
+        $strdelete   = get_string('delete');
+        $strmoveup   = get_string('moveup');
+        $strmovedown = get_string('movedown');
+        $stredit     = get_string('edit');
+
+        $fieldcount = $DB->count_records('custom_info_field', array('categoryid' => $field->categoryid));
+        $datacount  = $DB->count_records('custom_info_data', array('fieldid' => $field->id));
+
+        /// Edit
+        $editstr = '<a title="'.$stredit.'" href="index.php?id='.$field->id.'&amp;action=editfield"><img src="'.$OUTPUT->pix_url('t/edit') . '" alt="'.$stredit.'" class="iconsmall" /></a> ';
+
+        /// Delete
+        $editstr .= '<a title="'.$strdelete.'" href="index.php?id='.$field->id.'&amp;action=deletefield';
+        $editstr .= '"><img src="'.$OUTPUT->pix_url('t/delete') . '" alt="'.$strdelete.'" class="iconsmall" /></a> ';
+
+        /// Move up
+        if ($field->sortorder > 1) {
+            $editstr .= '<a title="'.$strmoveup.'" href="index.php?id='.$field->id.'&amp;action=movefield&amp;dir=up&amp;sesskey='.sesskey().'"><img src="'.$OUTPUT->pix_url('t/up') . '" alt="'.$strmoveup.'" class="iconsmall" /></a> ';
+         } else {
+            $editstr .= '<img src="'.$OUTPUT->pix_url('spacer') . '" alt="" class="iconsmall" /> ';
+        }
+
+        /// Move down
+        if ($field->sortorder < $fieldcount) {
+            $editstr .= '<a title="'.$strmovedown.'" href="index.php?id='.$field->id.'&amp;action=movefield&amp;dir=down&amp;sesskey='.sesskey().'"><img src="'.$OUTPUT->pix_url('t/down') . '" alt="'.$strmovedown.'" class="iconsmall" /></a> ';
+        } else {
+            $editstr .= '<img src="'.$OUTPUT->pix_url('spacer') . '" alt="" class="iconsmall" /> ';
+        }
+
+        return $editstr;
     }
 }
