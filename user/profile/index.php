@@ -10,28 +10,18 @@ admin_externalpage_setup('profilefields');
 
 $action   = optional_param('action', '', PARAM_ALPHA);
 
-$redirect = $CFG->wwwroot.'/user/profile/index.php';
-
 $strchangessaved    = get_string('changessaved');
 $strcancelled       = get_string('cancelled');
-$strdefaultcategory = get_string('profiledefaultcategory', 'admin');
 $strnofields        = get_string('profilenofieldsdefined', 'admin');
 $strcreatefield     = get_string('profilecreatefield', 'admin');
 
 $controller = new custominfo_controller('user');
+$controller->set_redirect($CFG->wwwroot.'/user/profile/index.php');
 
 /// Do we have any actions to perform before printing the header?
-$controller->dispatch_action($action, $redirect);
+$controller->dispatch_action($action);
 
-/// Check that we have at least one category defined
-if ($DB->count_records('custom_info_category', array('objectname' => 'user')) == 0) {
-    $defaultcategory = new stdClass();
-    $defaultcategory->objectname = 'user';
-    $defaultcategory->name = $strdefaultcategory;
-    $defaultcategory->sortorder = 1;
-    $DB->insert_record('custom_info_category', $defaultcategory);
-    redirect($redirect);
-}
+$controller->check_category_defined();
 
 /// Print the header
 echo $OUTPUT->header();

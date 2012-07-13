@@ -3,7 +3,15 @@
 require_once(__DIR__.'/lib.php');
 
 class custominfo_controller {
+    /**
+     * @var string
+     */
     protected $objectname;
+
+    /**
+     * @var string
+     */
+    protected $redirect;
 
     /**
      * Constructor
@@ -14,13 +22,20 @@ class custominfo_controller {
     }
 
     /**
+     * Accessor for redirect
+     * @param string $url
+     */
+    public function set_redirect($url) {
+        $this->redirect = $url;
+    }
+
+    /**
      * Dispatch the action name and eventually redirects the browser
      * @global object $DB
      * @global object $OUTPUT
      * @param string $action   Name of the action requested
-     * @param string $redirect URL to redirect after the action was performed
      */
-    public function dispatch_action($action, $redirect) {
+    public function dispatch_action($action) {
         global $DB, $OUTPUT;
         switch ($action) {
             case 'movecategory':
@@ -30,7 +45,7 @@ class custominfo_controller {
                 if (confirm_sesskey()) {
                     custominfo_category::findById($id)->move($dir);
                 }
-                redirect($redirect);
+                redirect($this->redirect);
                 break;
             case 'movefield':
                 $id  = required_param('id', PARAM_INT);
@@ -39,12 +54,12 @@ class custominfo_controller {
                 if (confirm_sesskey()) {
                     custominfo_field::findById($id)->move($dir);
                 }
-                redirect($redirect);
+                redirect($this->redirect);
                 break;
             case 'deletecategory':
                 $id = required_param('id', PARAM_INT);
                 custominfo_category::findById($id)->delete();
-                redirect($redirect, get_string('deleted'));
+                redirect($this->redirect, get_string('deleted'));
                 break;
             case 'deletefield':
                 $id      = required_param('id', PARAM_INT);
@@ -53,7 +68,7 @@ class custominfo_controller {
                 $datacount = $DB->count_records('custom_info_data', array('fieldid' => $id));
                 if (data_submitted() and ($confirm and confirm_sesskey()) or $datacount === 0) {
                     custominfo_field::findById($id)->delete();
-                    redirect($redirect, get_string('deleted'));
+                    redirect($this->redirect, get_string('deleted'));
                 }
 
                 //ask for confirmation
@@ -63,8 +78,8 @@ class custominfo_controller {
                 $PAGE->navbar->add($strheading);
                 echo $OUTPUT->header();
                 echo $OUTPUT->heading($strheading);
-                $formcontinue = new single_button(new moodle_url($redirect, $optionsyes), get_string('yes'), 'post');
-                $formcancel = new single_button(new moodle_url($redirect), get_string('no'), 'get');
+                $formcontinue = new single_button(new moodle_url($this->redirect, $optionsyes), get_string('yes'), 'post');
+                $formcancel = new single_button(new moodle_url($this->redirect), get_string('no'), 'get');
                 echo $OUTPUT->confirm(get_string('profileconfirmfielddeletion', 'admin', $datacount), $formcontinue, $formcancel);
                 echo $OUTPUT->footer();
                 die;
@@ -73,13 +88,13 @@ class custominfo_controller {
                 $id       = optional_param('id', 0, PARAM_INT);
                 $datatype = optional_param('datatype', '', PARAM_ALPHA);
 
-                $this->edit_field($id, $datatype, $redirect);
+                $this->edit_field($id, $datatype, $this->redirect);
                 die;
                 break;
             case 'editcategory':
                 $id = optional_param('id', 0, PARAM_INT);
 
-                $this->edit_category($id, $redirect);
+                $this->edit_category($id, $this->redirect);
                 die;
                 break;
             default:
@@ -88,12 +103,26 @@ class custominfo_controller {
     }
 
     /**
+     * Check that we have at least one category defined
+     * @global object $DB
+     */
+    public function check_category_defined() {
+        global $DB;
+        if ($DB->count_records('custom_info_category', array('objectname' => $this->objectname)) == 0) {
+            $defaultcategory = new stdClass();
+            $defaultcategory->objectname = $this->objectname;
+            $defaultcategory->name = get_string('profiledefaultcategory', 'admin');
+            $defaultcategory->sortorder = 1;
+            $DB->insert_record('custom_info_category', $defaultcategory);
+            redirect($this->redirect);
+        }
+    }
+    /**
      * Redirect or display the category form according to the data submitted
      * @global object $OUTPUT
      * @param integer $id
-     * @param string $redirect URL to redirect after the action was performed successfullly
      */
-    protected function edit_category($id, $redirect) {
+    protected function edit_category($id) {
         global $OUTPUT;
         $category = custominfo_category::type($this->objectname);
         if ($id) {
@@ -102,7 +131,7 @@ class custominfo_controller {
         switch ($category->edit()) {
             case custominfo_category::EDIT_CANCELLED:
             case custominfo_category::EDIT_SAVED:
-                redirect($redirect);
+                redirect($this->redirect);
             case custominfo_category::EDIT_DISPLAY:
                 if (empty($id)) {
                     $strheading = get_string('profilecreatenewcategory', 'admin');
@@ -122,9 +151,8 @@ class custominfo_controller {
      * Redirect or display the field form according to the data submitted
      * @global object $OUTPUT
      * @param integer $id
-     * @param string $redirect URL to redirect after the action was performed successfullly
      */
-    protected function edit_field($id, $datatype, $redirect) {
+    protected function edit_field($id, $datatype) {
         global $OUTPUT, $PAGE;
 
         $field = custominfo_field::type($this->objectname);
@@ -134,7 +162,7 @@ class custominfo_controller {
         switch ($field->edit($datatype)) {
             case custominfo_field::EDIT_CANCELLED:
             case custominfo_field::EDIT_SAVED:
-                redirect($redirect);
+                redirect($this->redirect);
             case custominfo_field::EDIT_DISPLAY:
 
             $datatypes = custominfo_field::list_datatypes();
