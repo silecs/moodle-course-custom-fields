@@ -28,7 +28,7 @@
  * @copyright  2007 onwards Shane Elliot {@link http://pukunui.com}
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
-class profile_define_menu extends profile_define_base {
+class profile_define_menu extends custominfo_define_base {
 
     /**
      * Adds elements to the form for creating/editing this type of profile field.

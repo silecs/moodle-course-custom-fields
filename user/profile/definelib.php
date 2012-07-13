@@ -25,17 +25,6 @@
 require_once($CFG->libdir . '/custominfo/lib.php');
 
 /**
- * Class profile_define_base
- *
- * @copyright  2007 onwards Shane Elliot {@link http://pukunui.com}
- * @license http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
- */
-class profile_define_base extends custominfo_define_base {
-    protected $objectname = 'user';
-}
-
-
-/**
  * Reorder the profile fields within a given category starting at the field at the given startorder.
  */
 function profile_reorder_fields() {
@@ -161,10 +150,10 @@ function profile_edit_field($id, $datatype, $redirect) {
         $field->set_id($id);
     }
     switch ($field->edit($datatype)) {
-        case custominfo_category::EDIT_CANCELLED:
-        case custominfo_category::EDIT_SAVED:
+        case custominfo_field::EDIT_CANCELLED:
+        case custominfo_field::EDIT_SAVED:
             redirect($redirect);
-        case custominfo_category::EDIT_DISPLAY:
+        case custominfo_field::EDIT_DISPLAY:
 
         $datatypes = profile_list_datatypes();
 
