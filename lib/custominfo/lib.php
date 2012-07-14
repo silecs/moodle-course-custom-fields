@@ -264,7 +264,7 @@ abstract class custominfo_field_base {
             $this->inputname = '';
         } else {
             $this->field = $field;
-            $this->inputname = 'custominfo_field_'.$field->shortname;
+            $this->inputname = 'profile_field_'.$field->shortname;
         }
 
         if (!empty($this->field)) {
