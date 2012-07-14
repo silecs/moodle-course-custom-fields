@@ -104,6 +104,10 @@ if ($id) {
     print_error('needcoursecategroyid');
 }
 
+// Load custom fields data.
+$custominfo_data = custominfo_data::type('course');
+$custominfo_data->load_data($course);
+
 // Prepare course and the editor.
 $editoroptions = array('maxfiles' => EDITOR_UNLIMITED_FILES, 'maxbytes'=>$CFG->maxbytes, 'trusttext'=>false, 'noclean'=>true);
 $overviewfilesoptions = course_overviewfiles_options($course);
@@ -150,6 +154,9 @@ if ($editform->is_cancelled()) {
         // In creating the course.
         $course = create_course($data, $editoroptions);
 
+        // save custom fields data
+        $custominfo_data->save_data($data);
+
         // Get the context of the newly created course.
         $context = context_course::instance($course->id, MUST_EXIST);
 
@@ -180,6 +187,9 @@ if ($editform->is_cancelled()) {
         update_course($data, $editoroptions);
         // Set the URL to take them too if they choose save and display.
         $courseurl = new moodle_url('/course/view.php', array('id' => $course->id));
+
+        // save custom fields data
+        $custominfo_data->save_data($data);
     }
 
     if (isset($data->saveanddisplay)) {
