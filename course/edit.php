@@ -64,6 +64,10 @@ if ($id) { // editing course
     print_error('needcoursecategroyid');
 }
 
+//Load custom fields data
+$custominfo_data = custominfo_data::type('course');
+$custominfo_data->load_data($course);
+
 // Prepare course and the editor
 $editoroptions = array('maxfiles' => EDITOR_UNLIMITED_FILES, 'maxbytes'=>$CFG->maxbytes, 'trusttext'=>false, 'noclean'=>true);
 if (!empty($course)) {
@@ -110,6 +114,9 @@ if ($editform->is_cancelled()) {
         // In creating the course
         $course = create_course($data, $editoroptions);
 
+        // save custom fields data
+        $custominfo_data->save_data($data);
+
         // Get the context of the newly created course
         $context = context_course::instance($course->id, MUST_EXIST);
 
@@ -133,6 +140,9 @@ if ($editform->is_cancelled()) {
     } else {
         // Save any changes to the files used in the editor
         update_course($data, $editoroptions);
+
+        // save custom fields data
+        $custominfo_data->save_data($data);
     }
 
     // Redirect user to newly created/updated course.
