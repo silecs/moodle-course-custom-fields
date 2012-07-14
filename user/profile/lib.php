@@ -6,46 +6,15 @@ require_once($CFG->libdir . '/custominfo/lib.php');
 /***** General purpose functions for customisable user profiles *****/
 
 function profile_load_data($user) {
-    global $DB;
-
-    $fields = $DB->get_records('custom_info_field', array('objectname' => 'user'));
-    if ($fields) {
-        foreach ($fields as $field) {
-            $formfield = custominfo_field_factory("user", $field->datatype, $field->id, $user->id);
-            $formfield->edit_load_object_data($user);
-        }
-    }
+    return custominfo_data::type('user')->load_data($user);
 }
 
 function profile_save_data($usernew) {
-    global $CFG, $DB;
-
-    $fields = $DB->get_records('custom_info_field', array('objectname' => 'user'));
-    if ($fields) {
-        foreach ($fields as $field) {
-            $formfield = custominfo_field_factory("user", $field->datatype, $field->id, $usernew->id);
-            $formfield->edit_save_data($usernew);
-        }
-    }
+    return custominfo_data::type('user')->save_data($usernew);
 }
 
 function profile_display_fields($userid) {
-    global $CFG, $DB;
-
-    $categories = $DB->get_records('custom_info_category', array('objectname' => 'user'), 'sortorder ASC');
-    if ($categories) {
-        foreach ($categories as $category) {
-            $fields = $DB->get_records('custom_info_field', array('categoryid' => $category->id), 'sortorder ASC');
-            if ($fields) {
-                foreach ($fields as $field) {
-                    $formfield = custominfo_field_factory("user", $field->datatype, $field->id, $userid);
-                    if ($formfield->is_visible() and !$formfield->is_empty()) {
-                        print_row(format_string($formfield->field->name.':'), $formfield->display_data());
-                    }
-                }
-            }
-        }
-    }
+    return custominfo_data::type('user')->display_fields($userid);
 }
 
 /**
@@ -85,21 +54,7 @@ function profile_signup_fields($mform) {
  * @return  object
  */
 function profile_user_record($userid) {
-    global $CFG, $DB;
-
-    $usercustomfields = new stdClass();
-
-    $fields = $DB->get_records('custom_info_field', array('objectname' => 'user'));
-    if ($fields) {
-        foreach ($fields as $field) {
-            $formfield = custominfo_field_factory("user", $field->datatype, $field->id, $userid);
-            if ($formfield->is_object_data()) {
-                $usercustomfields->{$field->shortname} = $formfield->data;
-            }
-        }
-    }
-
-    return $usercustomfields;
+    return custominfo_data::type('user')->get_record($userid);
 }
 
 /**
@@ -113,5 +68,5 @@ function profile_user_record($userid) {
  * @return void $user object is modified
  */
 function profile_load_custom_fields($user) {
-    $user->profile = (array)profile_user_record($user->id);
+    $user->profile = (array)custominfo_data::type('user')->get_record($user->id);
 }
