@@ -4,6 +4,7 @@ if (!defined('MOODLE_INTERNAL')) {
     die('Direct access to this script is forbidden.');    ///  It must be included from a Moodle page
 }
 
+global $CFG;
 require_once($CFG->dirroot.'/lib/formslib.php');
 
 /**
@@ -11,8 +12,10 @@ require_once($CFG->dirroot.'/lib/formslib.php');
  */
 class category_form extends moodleform {
 
-    // Define the form
-    function definition () {
+    /**
+     * Define the form
+     */
+    public function definition () {
         $mform =& $this->_form;
 
         $strrequired = get_string('required');
@@ -30,8 +33,10 @@ class category_form extends moodleform {
         $this->add_action_buttons(true);
     } /// End of function
 
-/// perform some moodle validation
-    function validation($data, $files) {
+    /**
+     * perform some moodle validation
+     */
+    public function validation($data, $files) {
         global $CFG, $DB;
         $errors = parent::validation($data, $files);
 
