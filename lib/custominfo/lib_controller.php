@@ -39,7 +39,7 @@ class custominfo_controller {
      * @param string $action   Name of the action requested
      */
     public function dispatch_action($action) {
-        global $DB, $OUTPUT;
+        global $DB, $OUTPUT, $PAGE;
         switch ($action) {
             case 'movecategory':
                 $id  = required_param('id', PARAM_INT);
