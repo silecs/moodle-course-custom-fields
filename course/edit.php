@@ -155,6 +155,7 @@ if ($editform->is_cancelled()) {
         $course = create_course($data, $editoroptions);
 
         // save custom fields data
+        $data->id = $course->id;
         $custominfo_data->save_data($data);
 
         // Get the context of the newly created course.
