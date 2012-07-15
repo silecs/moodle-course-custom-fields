@@ -37,7 +37,7 @@ class category_form extends moodleform {
      * perform some moodle validation
      */
     public function validation($data, $files) {
-        global $CFG, $DB;
+        global $DB;
         $errors = parent::validation($data, $files);
 
         $data  = (object)$data;
