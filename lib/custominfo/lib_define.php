@@ -16,7 +16,7 @@ abstract class custominfo_define_base {
 
     /**
      * Prints out the form snippet for creating or editing a profile field
-     * @param   object   instance of the moodleform class
+     * @param   object $form  instance of the moodleform class
      */
     function define_form(&$form) {
         $form->addElement('header', '_commonsettings', get_string('profilecommonsettings', 'admin'));
@@ -29,7 +29,7 @@ abstract class custominfo_define_base {
     /**
      * Prints out the form snippet for the part of creating or
      * editing a profile field common to all data types
-     * @param   object   instance of the moodleform class
+     * @param   object $form  instance of the moodleform class
      */
     function define_form_common(&$form) {
 
@@ -68,7 +68,7 @@ abstract class custominfo_define_base {
     /**
      * Prints out the form snippet for the part of creating or
      * editing a profile field specific to the current data type
-     * @param   object   instance of the moodleform class
+     * @param   object $form  instance of the moodleform class
      */
     function define_form_specific($form) {
         /// do nothing - overwrite if necessary
@@ -78,7 +78,7 @@ abstract class custominfo_define_base {
      * Validate the data from the add/edit profile field form.
      * Generally this method should not be overwritten by child
      * classes.
-     * @param   object   data from the add/edit profile field form
+     * @param   object|array data  data from the add/edit profile field form
      * @return  array    associative array of error messages
      */
     function define_validate($data, $files) {
@@ -96,7 +96,8 @@ abstract class custominfo_define_base {
      * Validate the data from the add/edit profile field form
      * that is common to all data types. Generally this method
      * should not be overwritten by child classes.
-     * @param   object   data from the add/edit profile field form
+     * @param   object $data  data from the add/edit profile field form
+     * @param   array  $files
      * @return  array    associative array of error messages
      */
     function define_validate_common($data, $files) {
@@ -133,8 +134,8 @@ abstract class custominfo_define_base {
     /**
      * Validate the data from the add/edit profile field form
      * that is specific to the current data type
-     * @param   object   data from the add/edit profile field form
-     * @param   array    files
+     * @param   object $data   data from the add/edit profile field form
+     * @param   array  $files  files
      * @return  array    associative array of error messages
      */
     function define_validate_specific($data, $files) {
@@ -144,7 +145,7 @@ abstract class custominfo_define_base {
 
     /**
      * Alter form based on submitted or existing data
-     * @param   object   form
+     * @param   object $mform  form
      */
     function define_after_data(&$mform) {
         /// do nothing - overwrite if necessary
@@ -152,7 +153,7 @@ abstract class custominfo_define_base {
 
     /**
      * Add a new profile field or save changes to current field
-     * @param   object   data from the add/edit profile field form
+     * @param   object $data  data from the add/edit profile field form
      * @return  boolean  status of the insert/update record
      */
     function define_save($data) {
@@ -184,7 +185,7 @@ abstract class custominfo_define_base {
      * Preprocess data from the add/edit profile field form
      * before it is saved. This method is a hook for the child
      * classes to overwrite.
-     * @param   object   data from the add/edit profile field form
+     * @param   object $data  data from the add/edit profile field form
      * @return  object   processed data object
      */
     function define_save_preprocess($data) {
@@ -193,7 +194,7 @@ abstract class custominfo_define_base {
     }
 
     /**
-     * Provides a method by which we can allow the default data in profile_define_*
+     * Provides a method by which we can allow the default data in $this->define_*
      * to use an editor
      *
      * This should return an array of editor names (which will need to be formatted/cleaned)

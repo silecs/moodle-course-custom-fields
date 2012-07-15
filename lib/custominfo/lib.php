@@ -66,7 +66,7 @@ abstract class custominfo_field_base {
     /**
      * Display the data for this field
      */
-    function display_data() {
+    public function display_data() {
         $options = new stdClass();
         $options->para = false;
         return format_text($this->data, FORMAT_MOODLE, $options);
@@ -77,7 +77,7 @@ abstract class custominfo_field_base {
      * @param   object  $mform instance of the moodleform class
      * $return  boolean
      */
-    function edit_field($mform) {
+    public function edit_field($mform) {
         if ($this->field->visible != CUSTOMINFO_VISIBLE_NONE
                 or has_capability($this->capability, get_context_instance(CONTEXT_SYSTEM))) {
 
@@ -94,7 +94,7 @@ abstract class custominfo_field_base {
      * @param   object $mform  instance of the moodleform class
      * $return  boolean
      */
-    function edit_after_data($mform) {
+    public function edit_after_data($mform) {
         if ($this->field->visible != CUSTOMINFO_VISIBLE_NONE
                 or has_capability($this->capability, get_context_instance(CONTEXT_SYSTEM))) {
             $this->edit_field_set_locked($mform);
@@ -108,7 +108,7 @@ abstract class custominfo_field_base {
      * @param   mixed  $new data coming from the form
      * @return  mixed  returns data id if success of db insert/update, false on fail, 0 if not permitted
      */
-    function edit_save_data($new) {
+    public function edit_save_data($new) {
         global $DB;
 
         if (!isset($new->{$this->inputname})) {
@@ -125,7 +125,8 @@ abstract class custominfo_field_base {
         $data->fieldid = $this->field->id;
         $data->data    = $new->{$this->inputname};
 
-        if ($dataid = $DB->get_field('custom_info_data', 'id', array('objectid' => $data->objectid, 'fieldid' => $data->fieldid))) {
+        $dataid = $DB->get_field('custom_info_data', 'id', array('objectid' => $data->objectid, 'fieldid' => $data->fieldid));
+        if ($dataid) {
             $data->id = $dataid;
             $DB->update_record('custom_info_data', $data);
         } else {
@@ -137,7 +138,7 @@ abstract class custominfo_field_base {
      * Validate the form field from profile page
      * @return  string  contains error message otherwise NULL
      **/
-    function edit_validate_field($new) {
+    public function edit_validate_field($new) {
         global $DB;
 
         $errors = array();
@@ -172,7 +173,7 @@ abstract class custominfo_field_base {
      * Sets the default data for the field in the form object
      * @param   object $mform  instance of the moodleform class
      */
-    function edit_field_set_default($mform) {
+    public function edit_field_set_default($mform) {
         if (!empty($default)) {
             $mform->setDefault($this->inputname, $this->field->defaultdata);
         }
@@ -182,7 +183,7 @@ abstract class custominfo_field_base {
      * Sets the required flag for the field in the form object
      * @param   object $mform  instance of the moodleform class
      */
-    function edit_field_set_required($mform) {
+    public function edit_field_set_required($mform) {
         if ($this->is_required() and !has_capability($this->capability, get_context_instance(CONTEXT_SYSTEM))) {
             $mform->addRule($this->inputname, get_string('required'), 'required', null, 'client');
         }
@@ -192,7 +193,7 @@ abstract class custominfo_field_base {
      * HardFreeze the field if locked.
      * @param   object $mform  instance of the moodleform class
      */
-    function edit_field_set_locked($mform) {
+    public function edit_field_set_locked($mform) {
         if (!$mform->elementExists($this->inputname)) {
             return;
         }
@@ -208,7 +209,7 @@ abstract class custominfo_field_base {
      * @param   stdClass $datarecord The object that will be used to save the record
      * @return  mixed
      */
-    function edit_save_data_preprocess($data, $datarecord) {
+    public function edit_save_data_preprocess($data, $datarecord) {
         return $data;
     }
 
@@ -217,7 +218,7 @@ abstract class custominfo_field_base {
      * form
      * @param   object $object  an object that is to be modified
      */
-    function edit_load_object_data($object) {
+    public function edit_load_object_data($object) {
         if ($this->data !== NULL) {
             $object->{$this->inputname} = $this->data;
         }
@@ -229,7 +230,7 @@ abstract class custominfo_field_base {
      * large, the child class should override this and return false
      * @return boolean
      */
-    function is_object_data() {
+    public function is_object_data() {
         return true;
     }
 
@@ -240,7 +241,7 @@ abstract class custominfo_field_base {
      * Accessor method: set the fieldid for this instance
      * @param   integer   $fieldid  id from the custom_info_field table
      */
-    function set_fieldid($fieldid) {
+    public function set_fieldid($fieldid) {
         $this->fieldid = $fieldid;
     }
 
@@ -248,14 +249,14 @@ abstract class custominfo_field_base {
      * Accessor method: set the object id for this instance
      * @param integer $objectid   id from the $objectname table
      */
-    function set_objectid($objectid) {
+    public function set_objectid($objectid) {
         $this->objectid = $objectid;
     }
 
     /**
      * Accessor method: Load the field record and the data associated with the object's fieldid and objectid
      */
-    function load_data() {
+    public function load_data() {
         global $DB;
 
         /// Load the field object
@@ -268,8 +269,9 @@ abstract class custominfo_field_base {
         }
 
         if (!empty($this->field)) {
-            if ($data = $DB->get_record('custom_info_data',
-                    array('objectid' => $this->objectid, 'fieldid' => $this->fieldid), 'data, dataformat')) {
+            $data = $DB->get_record('custom_info_data',
+                    array('objectid' => $this->objectid, 'fieldid' => $this->fieldid), 'data, dataformat');
+            if ($data) {
                 $this->data = $data->data;
                 $this->dataformat = $data->dataformat;
             } else {
@@ -285,7 +287,7 @@ abstract class custominfo_field_base {
      * Check if the field data is visible to the current user
      * @return  boolean
      */
-    function is_visible() {
+    public function is_visible() {
         return $this->extension->is_visible($this->field, $this->objectid);
     }
 
@@ -293,7 +295,7 @@ abstract class custominfo_field_base {
      * Check if the field data is considered empty
      * return boolean
      */
-    function is_empty() {
+    public function is_empty() {
         return (($this->data != '0') and empty($this->data));
     }
 
@@ -301,7 +303,7 @@ abstract class custominfo_field_base {
      * Check if the field is required on the edit profile page
      * @return   boolean
      */
-    function is_required() {
+    public function is_required() {
         return (boolean)$this->field->required;
     }
 
@@ -309,7 +311,7 @@ abstract class custominfo_field_base {
      * Check if the field is locked on the edit profile page
      * @return   boolean
      */
-    function is_locked() {
+    public function is_locked() {
         return (boolean)$this->field->locked;
     }
 
@@ -317,7 +319,7 @@ abstract class custominfo_field_base {
      * Check if the field data should be unique
      * @return   boolean
      */
-    function is_unique() {
+    public function is_unique() {
         return (boolean)$this->field->forceunique;
     }
 
@@ -325,7 +327,7 @@ abstract class custominfo_field_base {
      * Check if the field should appear on the signup page
      * @return   boolean
      */
-    function is_signup_field() {
+    public function is_signup_field() {
         return (boolean)$this->field->signup;
     }
 

@@ -31,7 +31,7 @@ abstract class custominfo_record {
      * Accessor method: set the id
      * @param integer $id  id from the table
      */
-    function set_id($id) {
+    public function set_id($id) {
         global $DB;
         $this->id = $id;
         if (isset($id)) {
@@ -46,7 +46,7 @@ abstract class custominfo_record {
      * Accessor method: set the record (and id)
      * @param object $record  record from the table
      */
-    function set_record($record) {
+    public function set_record($record) {
         if (empty($record->id) || empty($record->name) || empty($record->objectname) || $record->objectname != $this->objectname) {
             print_error('invaliditemid');
         }
@@ -58,11 +58,14 @@ abstract class custominfo_record {
      * Accessor method: get the record
      * return object record from the table
      */
-    function get_record() {
+    public function get_record() {
         return $this->record;
     }
 }
 
+/**
+ * Class that manipulates a custominfo category.
+ */
 class custominfo_category extends custominfo_record {
     protected $table = 'custom_info_category';
 
@@ -265,6 +268,9 @@ class custominfo_category extends custominfo_record {
     }
 }
 
+/**
+ * Class that manipulates a custominfo field.
+ */
 class custominfo_field extends custominfo_record {
     protected $table = 'custom_info_field';
 
@@ -298,7 +304,7 @@ class custominfo_field extends custominfo_record {
      * @param integer $id
      * @return  boolean   success of operation
      */
-    function delete() {
+    public function delete() {
         global $DB;
         /// Remove any data associated with this field
         if (!$DB->delete_records('custom_info_data', array('fieldid' => $this->id))) {
@@ -316,7 +322,7 @@ class custominfo_field extends custominfo_record {
      * @param   string  $dir  direction of move: "up" or "down"
      * @return  boolean       success of operation
      */
-    function move($dir) {
+    public function move($dir) {
         global $DB;
 
         if (!$this->record) {
@@ -359,7 +365,7 @@ class custominfo_field extends custominfo_record {
     /**
      * Reorder the profile fields within a given category
      */
-    function reorder() {
+    public function reorder() {
         global $DB;
         $categories = $DB->get_records('custom_info_category', array('objectname' => $this->objectname));
         if ($categories) {
@@ -383,7 +389,7 @@ class custominfo_field extends custominfo_record {
      * @param string $datatype Name of the field plugin.
      * @return integer Code among self::EDIT_*
      */
-    function edit($datatype) {
+    public function edit($datatype) {
         if (!$this->record) {
             $this->record = new stdClass();
             $this->record->objectname = $this->objectname;
