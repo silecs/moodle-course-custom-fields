@@ -44,8 +44,6 @@ class field_form extends moodleform {
      * Define the form
      */
     public function definition () {
-        global $CFG;
-
         $mform = $this->_form;
 
         // Everything else is dependant on the data type.
@@ -53,8 +51,6 @@ class field_form extends moodleform {
         require_once(__DIR__.'/field/'.$datatype.'/define.class.php');
         $newfield = 'profile_define_'.$datatype;
         $this->field = new $newfield($this->_customdata['objectname']);
-
-        $strrequired = get_string('required');
 
         // Add some extra hidden fields.
         $mform->addElement('hidden', 'id');
