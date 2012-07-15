@@ -101,7 +101,7 @@ abstract class custominfo_define_base {
      * @return  array    associative array of error messages
      */
     function define_validate_common($data, $files) {
-        global $USER, $DB;
+        global $DB;
 
         $err = array();
 

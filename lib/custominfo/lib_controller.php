@@ -229,7 +229,7 @@ class custominfo_controller {
      * @return  string   the icon string
      */
     protected function category_icons($category) {
-        global $CFG, $DB, $OUTPUT;
+        global $DB, $OUTPUT;
 
         $strdelete   = get_string('delete');
         $strmoveup   = get_string('moveup');
@@ -274,7 +274,7 @@ class custominfo_controller {
      * @return  string   the icon string
      */
     protected function field_icons($field) {
-        global $CFG, $DB, $OUTPUT;
+        global $DB, $OUTPUT;
 
         $strdelete   = get_string('delete');
         $strmoveup   = get_string('moveup');
@@ -282,7 +282,7 @@ class custominfo_controller {
         $stredit     = get_string('edit');
 
         $fieldcount = $DB->count_records('custom_info_field', array('categoryid' => $field->categoryid));
-        $datacount  = $DB->count_records('custom_info_data', array('fieldid' => $field->id));
+        //$datacount  = $DB->count_records('custom_info_data', array('fieldid' => $field->id));
 
         /// Edit
         $editstr = '<a title="'.$stredit.'" href="index.php?id='.$field->id.'&amp;action=editfield"><img src="'.$OUTPUT->pix_url('t/edit') . '" alt="'.$stredit.'" class="iconsmall" /></a> ';
