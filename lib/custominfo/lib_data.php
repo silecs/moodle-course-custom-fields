@@ -1,4 +1,7 @@
 <?php
+/**
+ * This file contains 2 classes that can be used to put/read data in the custom fields of some object.
+ */
 
 /**
  * Contains some methods for reading and writing the data in the custom fields.
