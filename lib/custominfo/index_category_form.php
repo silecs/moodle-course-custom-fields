@@ -67,7 +67,7 @@ class category_form extends moodleform {
      * @return array
      */
     public function validation($data, $files) {
-        global $CFG, $DB;
+        global $DB;
         $errors = parent::validation($data, $files);
 
         $data  = (object)$data;

@@ -405,7 +405,8 @@ class custominfo_field extends custominfo_record {
         if ($form->is_cancelled()) {
             return self::EDIT_CANCELLED;
         } else {
-            if ($data = $form->get_data()) {
+            $data = $form->get_data();
+            if ($data) {
                 require_once(__DIR__.'/field/'.$datatype.'/define.class.php');
                 $newfield = 'profile_define_'.$datatype;
                 $formfield = new $newfield($this->objectname);
