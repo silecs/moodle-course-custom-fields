@@ -65,7 +65,8 @@ class custominfo_data {
     }
 
     /**
-     * Display a list of the visible field names and values
+     * Display a list of the visible field names and values.
+     * This is currently used by "user" pages with a simple header: <table class="list" summary="">
      * @global object $DB
      * @param integer $objectid
      */
@@ -80,7 +81,11 @@ class custominfo_data {
                     foreach ($fields as $field) {
                         $formfield = custominfo_field_factory($this->objectname, $field->datatype, $field->id, $objectid);
                         if ($formfield->is_visible() and !$formfield->is_empty()) {
-                            print_row(format_string($formfield->field->name.':'), $formfield->display_data());
+                            printf(
+                                    "\n<tr><td class=\"label c0\">%s</td><td class=\"info c1\">%s</td></tr>\n",
+                                    format_string($formfield->field->name.':'),
+                                    $formfield->display_data()
+                            );
                         }
                     }
                 }
