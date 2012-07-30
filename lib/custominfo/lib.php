@@ -184,7 +184,7 @@ abstract class custominfo_field_base {
      * @param   object $mform  instance of the moodleform class
      */
     public function edit_field_set_required($mform) {
-        if ($this->is_required() and !has_capability($this->capability, get_context_instance(CONTEXT_SYSTEM))) {
+        if ($this->is_required() and $this->extension->obeys_required($this->objectid)) {
             $mform->addRule($this->inputname, get_string('required'), 'required', null, 'client');
         }
     }
@@ -370,5 +370,11 @@ interface custominfo_field_extension_i {
      * @return  boolean
      */
     public function is_visible($field, $objectid);
+
+    /**
+     * When a field is marked "required", do we enforce it?
+     * @param integer $objectid
+     */
+    public function obeys_required($objectid);
 }
 

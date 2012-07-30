@@ -32,4 +32,13 @@ class custominfo_field_extension_user implements custominfo_field_extension_i {
                 return has_capability($this->capability, get_context_instance(CONTEXT_USER, $objectid));
         }
     }
+
+    /**
+     * When a field is marked "required", do we enforce it?
+     * @param integer $objectid
+     */
+    public function obeys_required($objectid) {
+        global $USER;
+        return ($objectid == $USER->id);
+    }
 } /// End of class definition

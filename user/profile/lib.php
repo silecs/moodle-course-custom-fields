@@ -9,6 +9,16 @@ function profile_load_data($user) {
     return custominfo_data::type('user')->load_data($user);
 }
 
+/**
+ * Print out the customisable categories and fields for a users profile
+ * @param  object   instance of the moodleform class
+ * @param int $userid id of user whose profile is being edited.
+ */
+function profile_definition($mform, $userid = 0) {
+    $ext = new custominfo_form_extension('user');
+    return $ext->definition($mform, has_capability('moodle/user:update', get_context_instance(CONTEXT_SYSTEM)), $userid);
+}
+
 function profile_save_data($usernew) {
     return custominfo_data::type('user')->save_data($usernew);
 }
