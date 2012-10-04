@@ -4449,6 +4449,10 @@ function delete_course($courseorid, $showfeedback = true) {
     // make the course completely empty
     remove_course_contents($courseid, $showfeedback);
 
+    // delete the custom metadata of this course
+    require __DIR__ . '/custominfo/lib.php';
+    custominfo_data::type('course')->delete($courseid);
+
     // delete the course and related context instance
     delete_context(CONTEXT_COURSE, $courseid);
 
