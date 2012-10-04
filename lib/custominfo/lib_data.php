@@ -115,6 +115,21 @@ class custominfo_data {
 
         return $customfields;
     }
+
+    /**
+     * Deletes all the custom data of the given object
+     * @param  integer  $objectid
+     * @return  boolean success?
+     */
+    public function delete($objectid) {
+        global $DB;
+
+        if (!$objectid) {
+            return false;
+        }
+        $DB->delete_records('custom_info_data', array('objectname' => $this->objectname, 'objectid' => $objectid));
+        return true;
+    }
 }
 
 /**
