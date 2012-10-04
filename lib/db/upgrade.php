@@ -876,6 +876,29 @@ function xmldb_main_upgrade($oldversion) {
     // Put any upgrade step following this
 
     if ($oldversion < 2012062500.02) {
+        // Drop some old backup tables, not used anymore
+
+        // Define table backup_files to be dropped
+        $table = new xmldb_table('backup_files');
+
+        // Conditionally launch drop table for backup_files
+        if ($dbman->table_exists($table)) {
+            $dbman->drop_table($table);
+        }
+
+        // Define table backup_ids to be dropped
+        $table = new xmldb_table('backup_ids');
+
+        // Conditionally launch drop table for backup_ids
+        if ($dbman->table_exists($table)) {
+            $dbman->drop_table($table);
+        }
+
+        // Main savepoint reached
+        upgrade_main_savepoint(true, 2012062500.02);
+    }
+
+    if ($oldversion < 2012062500.03) {
         $table = new xmldb_table('user_info_data');
         // Drop index userfieldidx
         $index = new xmldb_index('userfieldidx', XMLDB_INDEX_NOTUNIQUE, array('userid', 'fieldid'));
@@ -924,30 +947,7 @@ function xmldb_main_upgrade($oldversion) {
         unset($field);
 
         // Main savepoint reached
-        upgrade_main_savepoint(true, 2012062500.02);
-    }
-
-    if ($oldversion < 2012062500.02) {
-        // Drop some old backup tables, not used anymore
-
-        // Define table backup_files to be dropped
-        $table = new xmldb_table('backup_files');
-
-        // Conditionally launch drop table for backup_files
-        if ($dbman->table_exists($table)) {
-            $dbman->drop_table($table);
-        }
-
-        // Define table backup_ids to be dropped
-        $table = new xmldb_table('backup_ids');
-
-        // Conditionally launch drop table for backup_ids
-        if ($dbman->table_exists($table)) {
-            $dbman->drop_table($table);
-        }
-
-        // Main savepoint reached
-        upgrade_main_savepoint(true, 2012062500.02);
+        upgrade_main_savepoint(true, 2012062500.03);
     }
 
     if ($oldversion < 2012062501.01) {
