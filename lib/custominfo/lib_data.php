@@ -6,17 +6,7 @@
 /**
  * Contains some methods for reading and writing the data in the custom fields.
  */
-class custominfo_data {
-    protected $objectname;
-
-    /**
-     * Constructor
-     * @param string $objectname E.g. user, course
-     */
-    public function __construct($objectname) {
-        $this->objectname = $objectname;
-    }
-
+class custominfo_data extends custominfo_data_abstract {
     /**
      * Builds a new instance.
      * Syntaxic sugar to replace (new custominfo_data('user'))->...
@@ -38,7 +28,7 @@ class custominfo_data {
         if (empty($object)) {
             return;
         }
-        $fields = $DB->get_records('custom_info_field', array('objectname' => $this->objectname));
+        $fields = $this->getFields();
         if ($fields) {
             foreach ($fields as $field) {
                 $formfield = custominfo_field_factory($this->objectname, $field->datatype, $field->id, $object->id);
@@ -55,7 +45,7 @@ class custominfo_data {
     public function save_data($newobject) {
         global $DB;
 
-        $fields = $DB->get_records('custom_info_field', array('objectname' => $this->objectname));
+        $fields = $this->getFields();
         if ($fields) {
             foreach ($fields as $field) {
                 $formfield = custominfo_field_factory($this->objectname, $field->datatype, $field->id, $newobject->id);
@@ -70,10 +60,10 @@ class custominfo_data {
      * @global object $DB
      * @param integer $objectid
      */
-    public function display_fields($objectid) {
+    public function display_fields($objectid, $categories=null) {
         global $DB;
 
-        $categories = $DB->get_records('custom_info_category', array('objectname' => $this->objectname), 'sortorder ASC');
+        $categories = $this->getCategories();
         if ($categories) {
             foreach ($categories as $category) {
                 $fields = $DB->get_records('custom_info_field', array('categoryid' => $category->id), 'sortorder ASC');
@@ -91,6 +81,34 @@ class custominfo_data {
                 }
             }
         }
+    }
+
+    /**
+     * Returns a structured list (array(array)) of categories, fields names and values
+     * @global object $DB
+     * @param integer $objectid
+     * @param integer $allfields : if set, all fields are returned; otherwise only not empty ones
+     */
+    public function get_structured_fields($objectid, $allfields=false) {
+        global $DB;
+
+        $res = array();
+        $categories = $this->getCategories();
+        if ($categories) {
+            foreach ($categories as $category) {
+                $res[$category->name] = array();
+                $fields = $DB->get_records('custom_info_field', array('categoryid' => $category->id), 'sortorder ASC');
+                if ($fields) {
+                    foreach ($fields as $field) {
+                        $formfield = custominfo_field_factory($this->objectname, $field->datatype, $field->id, $objectid);
+                        if ($formfield->is_visible() && ($allfields || ! $formfield->is_empty()) )  {
+                            $res[$category->name][$formfield->field->name] = $formfield->display_data();
+                        }
+                    }
+                }
+            }
+        }
+        return $res;
     }
 
     /**
@@ -137,16 +155,7 @@ class custominfo_data {
  *
  * Each public method should be called from within an homonym moodle_form method.
  */
-class custominfo_form_extension {
-    protected $objectname;
-
-    /**
-     * Constructor
-     * @param string $objectname E.g. user, course
-     */
-    public function __construct($objectname) {
-        $this->objectname = $objectname;
-    }
+class custominfo_form_extension extends custominfo_data_abstract {
 
     /**
      * Declare the customisable categories and fields on a form
@@ -157,11 +166,12 @@ class custominfo_form_extension {
     public function definition($mform, $canviewall=false, $objectid=0) {
         global $DB;
 
-        $categories = $DB->get_records('custom_info_category', array('objectname' => $this->objectname), 'sortorder ASC');
+        $categories = $this->getCategories();
         if ($categories) {
+            $allFields = $this->getFields(true);
             foreach ($categories as $category) {
-                $fields = $DB->get_records('custom_info_field', array('categoryid' => $category->id), 'sortorder ASC');
-                if ($fields) {
+                if (isset($allFields[$category->id])) {
+                    $fields = $allFields[$category->id];
                     // check first if *any* fields will be displayed
                     $display = false;
                     if (!$canviewall) {
@@ -196,7 +206,7 @@ class custominfo_form_extension {
 
         $objectid = ($objectid < 0) ? 0 : (int)$objectid;
 
-        $fields = $DB->get_records('custom_info_field', array('objectname' => $this->objectname));
+        $fields = $this->getFields();
         if ($fields) {
             foreach ($fields as $field) {
                 $formfield = custominfo_field_factory($this->objectname, $field->datatype, $field->id, $objectid);
@@ -216,7 +226,7 @@ class custominfo_form_extension {
         global $DB;
 
         $err = array();
-        $fields = $DB->get_records('custom_info_field', array('objectname' => $this->objectname));
+        $fields = $this->getFields();
         if ($fields) {
             foreach ($fields as $field) {
                 $formfield = custominfo_field_factory($this->objectname, $field->datatype, $field->id, $objectnew->id);
@@ -224,5 +234,92 @@ class custominfo_form_extension {
             }
         }
         return $err;
+    }
+}
+
+/**
+ * Abstract class that handles the process of filtering categories.
+ */
+abstract class custominfo_data_abstract {
+    protected $objectname;
+
+    /**
+     * @var array of "custom_info_category" records to use instead of all of them.
+     */
+    protected $categories;
+
+    /**
+     * @var boolean
+     */
+    protected $filteredCategories = false;
+
+    /**
+     * Constructor
+     * @param string $objectname E.g. user, course
+     */
+    public function __construct($objectname) {
+        $this->objectname = $objectname;
+    }
+
+    /**
+     * Limits the categories used by the other methods.
+     * @param array $categories of "custom_info_category" records.
+     */
+    public function setCategories($categories) {
+        $this->categories = $categories;
+        $this->filteredCategories = !empty($categories);
+    }
+
+    /**
+     * Return the categories selected, or all of them if no selection was made.
+     * @return array of objects.
+     */
+    public function getCategories() {
+        global $DB;
+        if (!$this->categories) {
+            $this->categories = $DB->get_records('custom_info_category', array('objectname' => $this->objectname), 'sortorder ASC');
+        }
+        return $this->categories;
+    }
+
+    /**
+     * Return the categories selected, or all of them if no selection was made.
+     * @return array of integers.
+     */
+    public function getCategoriesIds() {
+        $ids = array();
+        foreach ($this->getCategories() as $c) {
+            $ids[] = (int) $c->id;
+        }
+        return $ids;
+    }
+
+    /**
+     * Return all the custominfo fields, eventually restricted to the categories selected.
+     * @param boolean $byCategoriesIds (opt) If true, the first level will be the categories ID, instead of a flat array.
+     * @return array
+     */
+    public function getFields($byCategoriesIds=false) {
+        global $DB;
+        $categoryCond = $this->filteredCategories ?
+                " AND categoryid IN (" . join(',', $this->getCategoriesIds()) . ")"
+                : '';
+        $fields = $DB->get_records_select(
+                'custom_info_field',
+                "objectname = ?" . $categoryCond,
+                array($this->objectname),
+                'categoryid ASC, sortorder ASC'
+        );
+        if (!$byCategoriesIds || !$fields) {
+            return $fields;
+        }
+        $byCat = array();
+        foreach ($fields as $f) {
+            if (!isset($byCat[$f->categoryid])) {
+                $byCat[$f->categoryid] = array();
+            }
+            $byCat[$f->categoryid][] = $f;
+        }
+        return $byCat;
     }
 }
