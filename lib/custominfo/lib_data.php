@@ -271,12 +271,28 @@ abstract class custominfo_data_abstract {
     }
 
     /**
+     * Limits the categories used by the other methods to some given names.
+     * @todo Find a better way to build a portable SQL IN() from string values.
+     * @param array $categoriesNames Array of strings.
+     */
+    public function setCategoriesByNames($categoriesNames) {
+        global $DB;
+        $this->categories = $DB->get_records_select(
+                'custom_info_category',
+                "objectname = ? AND name IN ('" . join("','", array_map('addslashes', $categoriesNames)) . "')",
+                array($this->objectname),
+                'sortorder ASC'
+        );
+        $this->filteredCategories = true;
+    }
+
+    /**
      * Return the categories selected, or all of them if no selection was made.
      * @return array of objects.
      */
     public function getCategories() {
         global $DB;
-        if (!$this->categories) {
+        if (!$this->categories && !$this->filteredCategories) {
             $this->categories = $DB->get_records('custom_info_category', array('objectname' => $this->objectname), 'sortorder ASC');
         }
         return $this->categories;
@@ -301,9 +317,13 @@ abstract class custominfo_data_abstract {
      */
     public function getFields($byCategoriesIds=false) {
         global $DB;
-        $categoryCond = $this->filteredCategories ?
-                " AND categoryid IN (" . join(',', $this->getCategoriesIds()) . ")"
-                : '';
+        $categoryCond = '';
+        if ($this->filteredCategories) {
+            if (!$this->getCategoriesIds()) {
+                return array();
+            }
+            $categoryCond =  " AND categoryid IN (" . join(',', $this->getCategoriesIds()) . ")";
+        }
         $fields = $DB->get_records_select(
                 'custom_info_field',
                 "objectname = ?" . $categoryCond,
