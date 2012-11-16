@@ -19,6 +19,20 @@ function profile_definition($mform, $userid = 0) {
     return $ext->definition($mform, has_capability('moodle/user:update', get_context_instance(CONTEXT_SYSTEM)), $userid);
 }
 
+function profile_validation($usernew, $files) {
+    global $DB;
+
+    $err = array();
+    $fields = $DB->get_records('custom_info_field', array('objectname' => 'user'));
+    if ($fields) {
+        foreach ($fields as $field) {
+            $formfield = custominfo_field_factory('user', $field->datatype, $field->id, $usernew->id);
+            $err += $formfield->edit_validate_field($usernew, $files);
+        }
+    }
+    return $err;
+}
+
 function profile_save_data($usernew) {
     return custominfo_data::type('user')->save_data($usernew);
 }
