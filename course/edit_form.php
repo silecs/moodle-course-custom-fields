@@ -336,6 +336,7 @@ class course_edit_form extends moodleform {
 
         $mform = $this->_form;
         $courseid = $mform->getElementValue('id');
+        $this->custominfo->set_objectid($courseid);
 
         // add available groupings
         if ($courseid and $mform->elementExists('defaultgroupingid')) {
