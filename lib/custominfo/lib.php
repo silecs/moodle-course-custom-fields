@@ -104,33 +104,54 @@ abstract class custominfo_field_base {
     }
 
     /**
-     * Saves the data coming from form
+     * Reads the data coming from the form but does not save it into the DB
      * @param   mixed  $new data coming from the form
-     * @return  mixed  returns data id if success of db insert/update, false on fail, 0 if not permitted
+     * @return  object  returns data if success
      */
-    public function edit_save_data($new) {
-        global $DB;
-
+    public function edit_data($new) {
         if (!isset($new->{$this->inputname})) {
             // field not present in form, probably locked and invisible - skip it
-            return;
+            return null;
         }
 
         $data = new stdClass();
 
         $new->{$this->inputname} = $this->edit_save_data_preprocess($new->{$this->inputname}, $data);
+        if (!isset($new->id)) {
+            $new->id = null;
+        }
 
         $data->objectname = $this->objectname;
         $data->objectid = $new->id;
         $data->fieldid = $this->field->id;
         $data->data    = $new->{$this->inputname};
 
-        $dataid = $DB->get_field('custom_info_data', 'id', array('objectid' => $data->objectid, 'fieldid' => $data->fieldid));
+        $this->objectid = $data->objectid;
+        $this->fieldid = $data->fieldid;
+        $this->data = $data->data;
+
+        return $data;
+    }
+
+    /**
+     * Saves the data coming from the form
+     * @param   mixed  $new data coming from the form
+     * @return  mixed  returns data id if success of db insert/update, false on fail, 0 if not permitted
+     */
+    public function edit_save_data($new) {
+        global $DB;
+
+        $record = $this->edit_data($new);
+        if (empty($record)) {
+            return;
+        }
+
+        $dataid = $DB->get_field('custom_info_data', 'id', array('objectid' => $record->objectid, 'fieldid' => $record->fieldid));
         if ($dataid) {
-            $data->id = $dataid;
-            $DB->update_record('custom_info_data', $data);
+            $record->id = $dataid;
+            $DB->update_record('custom_info_data', $record);
         } else {
-            $DB->insert_record('custom_info_data', $data);
+            $DB->insert_record('custom_info_data', $record);
         }
     }
 
@@ -256,16 +277,21 @@ abstract class custominfo_field_base {
     /**
      * Accessor method: Load the field record and the data associated with the object's fieldid and objectid
      */
-    public function load_data() {
+    public function load_data($field=null) {
         global $DB;
 
         /// Load the field object
-        if ($this->fieldid == 0 or !($field = $DB->get_record('custom_info_field', array('id' => $this->fieldid)))) {
-            $this->field = NULL;
-            $this->inputname = '';
-        } else {
+        if ($field) {
+            $this->set_fieldid($field->id);
+        } else if ($this->fieldid != 0) {
+            $field = $DB->get_record('custom_info_field', array('id' => $this->fieldid));
+        }
+        if ($field) {
             $this->field = $field;
             $this->inputname = 'profile_field_'.$field->shortname;
+        } else {
+            $this->field = NULL;
+            $this->inputname = '';
         }
 
         if (!empty($this->field)) {
@@ -347,6 +373,25 @@ function custominfo_field_factory($objectname, $fieldtype, $fieldid=0, $objectid
     require_once($CFG->libdir.'/custominfo/field/'.$fieldtype.'/field.class.php');
     $newfield = 'profile_field_'.$fieldtype;
     if (empty($fieldid)) {
+        return (new $newfield($objectname));
+    } else {
+        return (new $newfield($objectname, $fieldid, $objectid));
+    }
+}
+
+/**
+ * Create a new instance of a child class of custominfo_field_base.
+ *
+ * @param string $objectname The model has uses custominfo (user, course)
+ * @param object $field  The custominfo field
+ * @param integer $objectid  (opt) The objectid to fill the field from
+ * @return custominfo_field_base
+ */
+function custominfo_field_from_record($objectname, $field, $objectid=0) {
+    global $CFG;
+    require_once($CFG->libdir.'/custominfo/field/'.$field->type.'/field.class.php');
+    $newfield = 'profile_field_'.$field->type;
+    if (empty($field->id)) {
         return (new $newfield($objectname));
     } else {
         return (new $newfield($objectname, $fieldid, $objectid));
