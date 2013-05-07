@@ -9,18 +9,25 @@ function profile_load_data($user) {
     return custominfo_data::type('user')->load_data($user);
 }
 
-function profile_validation($usernew, $files) {
-    global $DB;
+/**
+ * Print out the customisable categories and fields for a users profile
+ * @param  object   instance of the moodleform class
+ * @param int $userid id of user whose profile is being edited.
+ */
+function profile_definition($mform, $userid = 0) {
+    $custominfo = new custominfo_form_extension('user', $userid);
+    $canviewall = has_capability('moodle/user:update', get_context_instance(CONTEXT_SYSTEM));
+    $custominfo->definition($mform, $canviewall);
+}
 
-    $err = array();
-    $fields = $DB->get_records('custom_info_field', array('objectname' => 'user'));
-    if ($fields) {
-        foreach ($fields as $field) {
-            $formfield = custominfo_field_factory('user', $field->datatype, $field->id, $usernew->id);
-            $err += $formfield->edit_validate_field($usernew, $files);
-        }
-    }
-    return $err;
+function profile_definition_after_data($mform, $userid) {
+    $custominfo = new custominfo_form_extension('user', $userid);
+    $custominfo->definition_after_data($mform);
+}
+
+function profile_validation($usernew, $files) {
+    $custominfo = new custominfo_form_extension('user');
+    return $custominfo->validation($usernew, $files);
 }
 
 function profile_save_data($usernew) {
