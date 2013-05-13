@@ -30,7 +30,7 @@
 
 defined('MOODLE_INTERNAL') || die();
 
-$string['language'] = 'שפת ממשק';
-$string['next'] = 'הבא';
-$string['previous'] = 'קודם';
-$string['reload'] = 'טען מחדש';
+$string['language'] = 'Забон';
+$string['next'] = 'Давомаш';
+$string['previous'] = 'Ба ақиб';
+$string['reload'] = 'Навсозӣ карда шавад';

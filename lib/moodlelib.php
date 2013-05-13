@@ -907,10 +907,7 @@ function clean_param($param, $type) {
         case PARAM_PLUGIN:
         case PARAM_AREA:
             // we do not want any guessing here, either the name is correct or not
-            if (!preg_match('/^[a-z][a-z0-9_]*[a-z0-9]$/', $param)) {
-                return '';
-            }
-            if (strpos($param, '__') !== false) {
+            if (!is_valid_plugin_name($param)) {
                 return '';
             }
             return $param;
@@ -6649,10 +6646,6 @@ class core_string_manager implements string_manager {
      * @return boot true if exists
      */
     public function string_exists($identifier, $component) {
-       $identifier = clean_param($identifier, PARAM_STRINGID);
-        if (empty($identifier)) {
-            return false;
-        }
         $lang = current_language();
         $string = $this->load_component_strings($component, $lang);
         return isset($string[$identifier]);
@@ -7134,10 +7127,6 @@ class install_string_manager implements string_manager {
      * @return boot true if exists
      */
     public function string_exists($identifier, $component) {
-        $identifier = clean_param($identifier, PARAM_STRINGID);
-        if (empty($identifier)) {
-            return false;
-        }
         // simple old style hack ;)
         $str = get_string($identifier, $component);
         return (strpos($str, '[[') === false);
@@ -7395,8 +7384,7 @@ function get_string($identifier, $component = '', $a = NULL, $lazyload = false) 
         return new lang_string($identifier, $component, $a);
     }
 
-    $identifier = clean_param($identifier, PARAM_STRINGID);
-    if (empty($identifier)) {
+    if (debugging('', DEBUG_DEVELOPER) && clean_param($identifier, PARAM_STRINGID) === '') {
         throw new coding_exception('Invalid string identifier. The identifier cannot be empty. Please fix your get_string() call.');
     }
 
@@ -8106,6 +8094,15 @@ function get_plugin_types($fullpaths=true) {
 }
 
 /**
+ * This method validates a plug name. It is much faster than calling clean_param.
+ * @param string $name a string that might be a plugin name.
+ * @return bool if this string is a valid plugin name.
+ */
+function is_valid_plugin_name($name) {
+    return (bool) preg_match('/^[a-z](?:[a-z0-9_](?!__))*[a-z0-9]$/', $name);
+}
+
+/**
  * Simplified version of get_list_of_plugins()
  * @param string $plugintype type of plugin
  * @return array name=>fulllocation pairs of plugins of given type
@@ -8169,9 +8166,8 @@ function get_plugin_list($plugintype) {
             if (in_array($pluginname, $ignored)) {
                 continue;
             }
-            $pluginname = clean_param($pluginname, PARAM_PLUGIN);
-            if (empty($pluginname)) {
-                // better ignore plugins with problematic names here
+            if (!is_valid_plugin_name($pluginname)) {
+                // Better ignore plugins with problematic names here.
                 continue;
             }
             $result[$pluginname] = $fulldir.'/'.$pluginname;
@@ -11240,7 +11236,7 @@ class lang_string {
         // Check if we need to process the string
         if ($this->string === null) {
             // Check the quality of the identifier.
-            if (clean_param($this->identifier, PARAM_STRINGID) == '') {
+            if (debugging('', DEBUG_DEVELOPER) && clean_param($this->identifier, PARAM_STRINGID) === '') {
                 throw new coding_exception('Invalid string identifier. Most probably some illegal character is part of the string identifier. Please check your string definition');
             }
 
