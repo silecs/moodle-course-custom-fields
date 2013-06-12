@@ -1559,8 +1559,8 @@ class restore_section_structure_step extends restore_structure_step {
             // If one is null but the other isn't something clearly went wrong and we'll skip this condition.
             $passed = false;
         } else if (!is_null($data->customfield)) {
-            $params = array('shortname' => $data->customfield, 'datatype' => $data->customfieldtype);
-            $customfieldid = $DB->get_field('user_info_field', 'id', $params);
+            $params = array('shortname' => $data->customfield, 'datatype' => $data->customfieldtype, 'objectname' => 'user');
+            $customfieldid = $DB->get_field('custom_info_field', 'id', $params);
             $passed = ($customfieldid !== false);
         }
 
@@ -3617,8 +3617,8 @@ class restore_module_structure_step extends restore_structure_step {
             // If one is null but the other isn't something clearly went wrong and we'll skip this condition.
             $passed = false;
         } else if (!empty($data->customfield)) {
-            $params = array('shortname' => $data->customfield, 'datatype' => $data->customfieldtype);
-            $customfieldid = $DB->get_field('user_info_field', 'id', $params);
+            $params = array('shortname' => $data->customfield, 'datatype' => $data->customfieldtype, 'objectname' => 'user');
+            $customfieldid = $DB->get_field('custom_info_field', 'id', $params);
             $passed = ($customfieldid !== false);
         }
 
