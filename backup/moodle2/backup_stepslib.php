@@ -361,8 +361,8 @@ class backup_module_structure_step extends backup_structure_step {
         $availabilityfield->set_source_sql('
             SELECT cmaf.*, uif.shortname AS customfield, uif.datatype AS customfieldtype
               FROM {course_modules_avail_fields} cmaf
-         LEFT JOIN {user_info_field} uif ON uif.id = cmaf.customfieldid
-             WHERE cmaf.coursemoduleid = ?', array(backup::VAR_MODID));
+         LEFT JOIN {custom_info_field} uif ON uif.id = cmaf.customfieldid
+             WHERE uif.objectname = \'user\' AND cmaf.coursemoduleid = ?', array(backup::VAR_MODID));
 
         // Define annotations
         $module->annotate_ids('grouping', 'groupingid');
@@ -411,8 +411,8 @@ class backup_section_structure_step extends backup_structure_step {
         $availfield->set_source_sql('
             SELECT csaf.*, uif.shortname AS customfield, uif.datatype AS customfieldtype
               FROM {course_sections_avail_fields} csaf
-         LEFT JOIN {user_info_field} uif ON uif.id = csaf.customfieldid
-             WHERE csaf.coursesectionid = ?', array(backup::VAR_SECTIONID));
+         LEFT JOIN {custom_info_field} uif ON uif.id = csaf.customfieldid
+             WHERE uif.objectname = \'user\' AND csaf.coursesectionid = ?', array(backup::VAR_SECTIONID));
         $formatoptions->set_source_sql('SELECT cfo.id, cfo.format, cfo.name, cfo.value
               FROM {course} c
               JOIN {course_format_options} cfo
