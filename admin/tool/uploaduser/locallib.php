@@ -402,7 +402,7 @@ function uu_pre_process_custom_profile_data($data) {
             if ($fields = $DB->get_records('custom_info_field',
                     array('objectname' => 'user', 'shortname' => $shortname))) {
                 foreach ($fields as $field) {
-                    $formfield = custominfo_field_factory("user", $field, $data->id);
+                    $formfield = custominfo_field_factory("user", $field->datatype, 0);
                     if (method_exists($formfield, 'convert_external_data')) {
                         $data->$key = $formfield->convert_external_data($value);
                     }
