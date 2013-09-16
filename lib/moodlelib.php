@@ -5025,7 +5025,7 @@ function delete_course($courseorid, $showfeedback = true) {
     remove_course_contents($courseid, $showfeedback);
 
     // delete the custom metadata of this course
-    require __DIR__ . '/custominfo/lib.php';
+    require_once __DIR__ . '/custominfo/lib.php';
     custominfo_data::type('course')->delete($courseid);
 
     // Delete the course and related context instance.
