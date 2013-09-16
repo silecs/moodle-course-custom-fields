@@ -19,7 +19,7 @@ class profile_field_menu extends custominfo_field_base {
         /// Param 1 for menu type is the options
         $options = explode("\n", $this->field->param1);
         $this->options = array();
-        if ($this->field->required){
+        if (!$this->field->required){
             $this->options[''] = get_string('choose').'...';
         }
         foreach($options as $key => $option) {
