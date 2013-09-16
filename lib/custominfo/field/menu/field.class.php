@@ -56,7 +56,7 @@ class profile_field_menu extends custominfo_field_base {
             $options = array();
         }
         $this->options = array();
-        if (!empty($this->field->required)) {
+        if (empty($this->field->required)) {
             $this->options[''] = get_string('choose').'...';
         }
         foreach ($options as $key => $option) {
