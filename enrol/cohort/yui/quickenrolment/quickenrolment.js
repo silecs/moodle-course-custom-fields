@@ -79,6 +79,7 @@ YUI.add('moodle-enrol_cohort-quickenrolment', function(Y) {
                 id : PANELID+COUNT,
                 visible : false
             });
+            panel.plug(Y.Plugin.Resize);
 
             // display the wheel on ajax events
             Y.on('io:start', function() {
@@ -393,4 +394,4 @@ YUI.add('moodle-enrol_cohort-quickenrolment', function(Y) {
         }
     }
 
-}, '@VERSION@', {requires:['base','node', 'overlay', 'io-base', 'test', 'json-parse', 'event-delegate', 'dd-plugin', 'event-key', 'moodle-core-notification']});
+}, '@VERSION@', {requires:['base','node', 'overlay', 'resize-plugin', 'io-base', 'test', 'json-parse', 'event-delegate', 'dd-plugin', 'event-key', 'moodle-core-notification']});
