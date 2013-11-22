@@ -121,6 +121,89 @@ class formslib_testcase extends basic_testcase {
         }
     }
 
+    public function test_range_rule() {
+        global $CFG;
+
+        require_once('HTML/QuickForm/Rule/Range.php'); // Requires this pear stuff.
+
+        $strictformsrequired = null;
+        if (isset($CFG->strictformsrequired)) {
+            $strictformsrequired = $CFG->strictformsrequired;
+        }
+
+        $rule = new HTML_QuickForm_Rule_Range();
+
+        // First run the tests with strictformsrequired off.
+        $CFG->strictformsrequired = false;
+        // Passes.
+        $rule->setName('minlength'); // Let's verify some min lengths.
+        $this->assertTrue($rule->validate('12', 2));
+        $this->assertTrue($rule->validate('123', 2));
+        $this->assertTrue($rule->validate('áé', 2));
+        $this->assertTrue($rule->validate('áéí', 2));
+        $rule->setName('maxlength'); // Let's verify some max lengths.
+        $this->assertTrue($rule->validate('1', 2));
+        $this->assertTrue($rule->validate('12', 2));
+        $this->assertTrue($rule->validate('á', 2));
+        $this->assertTrue($rule->validate('áé', 2));
+        $rule->setName('----'); // Let's verify some ranges.
+        $this->assertTrue($rule->validate('', array(0, 2)));
+        $this->assertTrue($rule->validate('1', array(0, 2)));
+        $this->assertTrue($rule->validate('12', array(0, 2)));
+        $this->assertTrue($rule->validate('á', array(0, 2)));
+        $this->assertTrue($rule->validate('áé', array(0, 2)));
+
+        // Fail.
+        $rule->setName('minlength'); // Let's verify some min lengths.
+        $this->assertFalse($rule->validate('', 2));
+        $this->assertFalse($rule->validate('1', 2));
+        $this->assertFalse($rule->validate('á', 2));
+        $rule->setName('maxlength'); // Let's verify some max lengths.
+        $this->assertFalse($rule->validate('123', 2));
+        $this->assertFalse($rule->validate('áéí', 2));
+        $rule->setName('----'); // Let's verify some ranges.
+        $this->assertFalse($rule->validate('', array(1, 2)));
+        $this->assertFalse($rule->validate('123', array(1, 2)));
+        $this->assertFalse($rule->validate('áéí', array(1, 2)));
+
+        // Now run the same tests with it on to make sure things work as expected.
+        $CFG->strictformsrequired = true;
+        // Passes.
+        $rule->setName('minlength'); // Let's verify some min lengths.
+        $this->assertTrue($rule->validate('12', 2));
+        $this->assertTrue($rule->validate('123', 2));
+        $this->assertTrue($rule->validate('áé', 2));
+        $this->assertTrue($rule->validate('áéí', 2));
+        $rule->setName('maxlength'); // Let's verify some min lengths.
+        $this->assertTrue($rule->validate('1', 2));
+        $this->assertTrue($rule->validate('12', 2));
+        $this->assertTrue($rule->validate('á', 2));
+        $this->assertTrue($rule->validate('áé', 2));
+        $rule->setName('----'); // Let's verify some ranges.
+        $this->assertTrue($rule->validate('', array(0, 2)));
+        $this->assertTrue($rule->validate('1', array(0, 2)));
+        $this->assertTrue($rule->validate('12', array(0, 2)));
+        $this->assertTrue($rule->validate('á', array(0, 2)));
+        $this->assertTrue($rule->validate('áé', array(0, 2)));
+
+        // Fail.
+        $rule->setName('minlength'); // Let's verify some min lengths.
+        $this->assertFalse($rule->validate('', 2));
+        $this->assertFalse($rule->validate('1', 2));
+        $this->assertFalse($rule->validate('á', 2));
+        $rule->setName('maxlength'); // Let's verify some min lengths.
+        $this->assertFalse($rule->validate('123', 2));
+        $this->assertFalse($rule->validate('áéí', 2));
+        $rule->setName('----'); // Let's verify some ranges.
+        $this->assertFalse($rule->validate('', array(1, 2)));
+        $this->assertFalse($rule->validate('123', array(1, 2)));
+        $this->assertFalse($rule->validate('áéí', array(1, 2)));
+
+        if (isset($strictformsrequired)) {
+            $CFG->strictformsrequired = $strictformsrequired;
+        }
+    }
+
     public function test_generate_id_select() {
         $el = new MoodleQuickForm_select('choose_one', 'Choose one',
             array(1 => 'One', '2' => 'Two'));
@@ -226,6 +309,24 @@ class formslib_testcase extends basic_testcase {
                     'xyz' => PARAM_RAW
                 ),
                 1 => PARAM_INT
+            ),
+            'repeatgroupel1' => array(
+                0 => PARAM_INT,
+                1 => PARAM_INT
+            ),
+            'repeatgroupel2' => array(
+                0 => PARAM_INT,
+                1 => PARAM_INT
+            ),
+            'repeatnamedgroup' => array(
+                0 => array(
+                    'repeatnamedgroupel1' => PARAM_INT,
+                    'repeatnamedgroupel2' => PARAM_INT
+                ),
+                1 => array(
+                    'repeatnamedgroupel1' => PARAM_INT,
+                    'repeatnamedgroupel2' => PARAM_INT
+                )
             )
         );
         $valuessubmitted = array(
@@ -262,6 +363,24 @@ class formslib_testcase extends basic_testcase {
                     'xyz' => '11.01'
                 ),
                 1 => '11.01'
+            ),
+            'repeatgroupel1' => array(
+                0 => '11.01',
+                1 => '11.01'
+            ),
+            'repeatgroupel2' => array(
+                0 => '11.01',
+                1 => '11.01'
+            ),
+            'repeatnamedgroup' => array(
+                0 => array(
+                    'repeatnamedgroupel1' => '11.01',
+                    'repeatnamedgroupel2' => '11.01'
+                ),
+                1 => array(
+                    'repeatnamedgroupel1' => '11.01',
+                    'repeatnamedgroupel2' => '11.01'
+                )
             )
         );
         $expectedvalues = array(
@@ -300,6 +419,26 @@ class formslib_testcase extends basic_testcase {
                     'xyz' => '11.01'
                 ),
                 1 => 11
+            ),
+            'repeatablegroup' => 2,
+            'repeatgroupel1' => array(
+                0 => 11,
+                1 => 11
+            ),
+            'repeatgroupel2' => array(
+                0 => 11,
+                1 => 11
+            ),
+            'repeatablenamedgroup' => 2,
+            'repeatnamedgroup' => array(
+                0 => array(
+                    'repeatnamedgroupel1' => 11,
+                    'repeatnamedgroupel2' => 11
+                ),
+                1 => array(
+                    'repeatnamedgroupel1' => 11,
+                    'repeatnamedgroupel2' => 11
+                )
             )
         );
 
@@ -342,6 +481,7 @@ class formslib_test_form extends moodleform {
     }
 }
 
+// Used to check value cleaning.
 class formslib_clean_value extends moodleform {
     public function get_form() {
         return $this->_form;
@@ -407,5 +547,23 @@ class formslib_clean_value extends moodleform {
         $mform->addElement('text', 'nested[1]', 'nested[1]');
         $mform->addElement('text', 'nested[0][xyz]', 'nested[0][xyz]');
         $mform->addElement('text', 'nested[0][bob][foo]', 'nested[0][bob][foo]');
+
+        // Add group in repeated element (with extra inheritance).
+        $groupelements = array(
+            $mform->createElement('text', 'repeatgroupel1', 'repeatgroupel1'),
+            $mform->createElement('text', 'repeatgroupel2', 'repeatgroupel2')
+        );
+        $group = $mform->createElement('group', 'repeatgroup', 'repeatgroup', $groupelements, null, false);
+        $this->repeat_elements(array($group), 2, array('repeatgroupel1' => array('type' => PARAM_INT),
+            'repeatgroupel2' => array('type' => PARAM_INT)), 'repeatablegroup', 'add', 0);
+
+        // Add named group in repeated element.
+        $groupelements = array(
+            $mform->createElement('text', 'repeatnamedgroupel1', 'repeatnamedgroupel1'),
+            $mform->createElement('text', 'repeatnamedgroupel2', 'repeatnamedgroupel2')
+        );
+        $group = $mform->createElement('group', 'repeatnamedgroup', 'repeatnamedgroup', $groupelements, null, true);
+        $this->repeat_elements(array($group), 2, array('repeatnamedgroup[repeatnamedgroupel1]' => array('type' => PARAM_INT),
+            'repeatnamedgroup[repeatnamedgroupel2]' => array('type' => PARAM_INT)), 'repeatablenamedgroup', 'add', 0);
     }
 }

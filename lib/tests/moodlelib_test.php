@@ -45,6 +45,7 @@ class moodlelib_testcase extends advanced_testcase {
             '9.0i' => array('Windows 7' => 'Mozilla/4.0 (compatible; MSIE 7.0; Windows NT 6.1; WOW64; Trident/5.0; SLCC2; .NET CLR 2.0.50727; .NET CLR 3.5.30729; .NET CLR 3.0.30729; Media Center PC 6.0)'),
             '10.0' => array('Windows 8' => 'Mozilla/5.0 (compatible; MSIE 10.0; Windows NT 6.2; Trident/6.0; Touch)'),
             '10.0i' => array('Windows 8' => 'Mozilla/4.0 (compatible; MSIE 7.0; Windows NT 6.2; Trident/6.0; Touch; .NET4.0E; .NET4.0C; Tablet PC 2.0)'),
+            '11.0' => array('Windows 8.1' => 'Mozilla/5.0 (Windows NT 6.3; WOW64; Trident/7.0; rv:11.0)'),
         ),
         'Firefox' => array(
             '1.0.6'   => array('Windows XP' => 'Mozilla/5.0 (Windows; U; Windows NT 5.1; en-US; rv:1.7.10) Gecko/20050716 Firefox/1.0.6'),
@@ -84,6 +85,29 @@ class moodlelib_testcase extends advanced_testcase {
                 'Debian Linux' => 'Opera/9.01 (X11; Linux i686; U; en)')
         )
     );
+
+    /**
+     * Define a local decimal separator.
+     *
+     * It is not possible to directly change the result of get_string in
+     * a unit test. Instead, we create a language pack for language 'xx' in
+     * dataroot and make langconfig.php with the string we need to change.
+     * The example separator used here is 'X'; on PHP 5.3 and before this
+     * must be a single byte character due to PHP bug/limitation in
+     * number_format, so you can't use UTF-8 characters.
+     *
+     * @global type $SESSION
+     * @global type $CFG
+     */
+    protected function define_local_decimal_separator() {
+        global $SESSION, $CFG;
+
+        $SESSION->lang = 'xx';
+        $langconfig = "<?php\n\$string['decsep'] = 'X';";
+        $langfolder = $CFG->dataroot . '/lang/xx';
+        check_dir_exists($langfolder);
+        file_put_contents($langfolder . '/langconfig.php', $langconfig);
+    }
 
     function test_cleanremoteaddr() {
         //IPv4
@@ -278,6 +302,15 @@ class moodlelib_testcase extends advanced_testcase {
         $this->assertTrue(check_browser_version('MSIE', '10'));
         $this->assertFalse(check_browser_version('MSIE', '11'));
 
+        $_SERVER['HTTP_USER_AGENT'] = $this->user_agents['MSIE']['11.0']['Windows 8.1'];
+        $this->assertTrue(check_browser_version('MSIE'));
+        $this->assertTrue(check_browser_version('MSIE', 0));
+        $this->assertTrue(check_browser_version('MSIE', '5.0'));
+        $this->assertTrue(check_browser_version('MSIE', '9.0'));
+        $this->assertTrue(check_browser_version('MSIE', '10'));
+        $this->assertTrue(check_browser_version('MSIE', '11'));
+        $this->assertFalse(check_browser_version('MSIE', '12'));
+
         $_SERVER['HTTP_USER_AGENT'] = $this->user_agents['Firefox']['2.0']['Windows XP'];
         $this->assertTrue(check_browser_version('Firefox'));
         $this->assertTrue(check_browser_version('Firefox', '1.5'));
@@ -463,7 +496,7 @@ class moodlelib_testcase extends advanced_testcase {
         $this->assertEquals($object, fix_utf8($object));
 
         // valid utf8 string
-        $this->assertSame("žlutý koníček přeskočil potůček \n\t\r\0", fix_utf8("žlutý koníček přeskočil potůček \n\t\r\0"));
+        $this->assertSame("žlutý koníček přeskočil potůček \n\t\r", fix_utf8("žlutý koníček přeskočil potůček \n\t\r\0"));
 
         // invalid utf8 string
         $this->assertSame('aš', fix_utf8('a'.chr(130).'š'), 'This fails with buggy iconv() when mbstring extenstion is not available as fallback.');
@@ -2083,7 +2116,6 @@ class moodlelib_testcase extends advanced_testcase {
      * Test localised float formatting.
      */
     public function test_format_float() {
-        global $SESSION, $CFG;
 
         // Special case for null
         $this->assertEquals('', format_float(null));
@@ -2099,17 +2131,8 @@ class moodlelib_testcase extends advanced_testcase {
         $this->assertEquals('5.43', format_float(5.43, 5, true, true));
         $this->assertEquals('5', format_float(5.0001, 3, true, true));
 
-        // It is not possible to directly change the result of get_string in
-        // a unit test. Instead, we create a language pack for language 'xx' in
-        // dataroot and make langconfig.php with the string we need to change.
-        // The example separator used here is 'X'; on PHP 5.3 and before this
-        // must be a single byte character due to PHP bug/limitation in
-        // number_format, so you can't use UTF-8 characters.
-        $SESSION->lang = 'xx';
-        $langconfig = "<?php\n\$string['decsep'] = 'X';";
-        $langfolder = $CFG->dataroot . '/lang/xx';
-        check_dir_exists($langfolder);
-        file_put_contents($langfolder . '/langconfig.php', $langconfig);
+        // Tests with a localised decimal separator.
+        $this->define_local_decimal_separator();
 
         // Localisation on (default)
         $this->assertEquals('5X43000', format_float(5.43, 5));
@@ -2118,6 +2141,80 @@ class moodlelib_testcase extends advanced_testcase {
         // Localisation off
         $this->assertEquals('5.43000', format_float(5.43, 5, false));
         $this->assertEquals('5.43', format_float(5.43, 5, false, true));
+    }
+
+    /**
+     * Test localised float unformatting.
+     */
+    public function test_unformat_float() {
+
+        // Tests without the localised decimal separator.
+
+        // Special case for null, empty or white spaces only strings.
+        $this->assertEquals(null, unformat_float(null));
+        $this->assertEquals(null, unformat_float(''));
+        $this->assertEquals(null, unformat_float('    '));
+
+        // Regular use.
+        $this->assertEquals(5.4, unformat_float('5.4'));
+        $this->assertEquals(5.4, unformat_float('5.4', true));
+
+        // No decimal.
+        $this->assertEquals(5.0, unformat_float('5'));
+
+        // Custom number of decimal.
+        $this->assertEquals(5.43267, unformat_float('5.43267'));
+
+        // Empty decimal.
+        $this->assertEquals(100.0, unformat_float('100.00'));
+
+        // With the thousand separator.
+        $this->assertEquals(1000.0, unformat_float('1 000'));
+        $this->assertEquals(1000.32, unformat_float('1 000.32'));
+
+        // Negative number.
+        $this->assertEquals(-100.0, unformat_float('-100'));
+
+        // Wrong value.
+        $this->assertEquals(0.0, unformat_float('Wrong value'));
+        // Wrong value in strict mode.
+        $this->assertFalse(unformat_float('Wrong value', true));
+
+        // Combining options.
+        $this->assertEquals(-1023.862567, unformat_float('   -1 023.862567     '));
+
+        // Bad decimal separator (should crop the decimal).
+        $this->assertEquals(50.0, unformat_float('50,57'));
+        // Bad decimal separator in strict mode (should return false).
+        $this->assertFalse(unformat_float('50,57', true));
+
+        // Tests with a localised decimal separator.
+        $this->define_local_decimal_separator();
+
+        // We repeat the tests above but with the current decimal separator.
+
+        // Regular use without and with the localised separator.
+        $this->assertEquals (5.4, unformat_float('5.4'));
+        $this->assertEquals (5.4, unformat_float('5X4'));
+
+        // Custom number of decimal.
+        $this->assertEquals (5.43267, unformat_float('5X43267'));
+
+        // Empty decimal.
+        $this->assertEquals (100.0, unformat_float('100X00'));
+
+        // With the thousand separator.
+        $this->assertEquals (1000.32, unformat_float('1 000X32'));
+
+        // Bad different separator (should crop the decimal).
+        $this->assertEquals (50.0, unformat_float('50Y57'));
+        // Bad different separator in strict mode (should return false).
+        $this->assertFalse (unformat_float('50Y57', true));
+
+        // Combining options.
+        $this->assertEquals (-1023.862567, unformat_float('   -1 023X862567     '));
+        // Combining options in strict mode.
+        $this->assertEquals (-1023.862567, unformat_float('   -1 023X862567     ', true));
     }
 
     /**
@@ -2258,5 +2355,37 @@ class moodlelib_testcase extends advanced_testcase {
         // Restore system default values.
         date_default_timezone_set($systemdefaulttimezone);
         setlocale(LC_TIME, $oldlocale);
+    }
+
+    public function test_email_to_user() {
+        $this->resetAfterTest();
+
+        $user1 = $this->getDataGenerator()->create_user();
+        $user2 = $this->getDataGenerator()->create_user();
+
+        $subject = 'subject';
+        $messagetext = 'message text';
+        $subject2 = 'subject 2';
+        $messagetext2 = 'message text 2';
+
+        unset_config('noemailever');
+
+        $sink = $this->redirectEmails();
+        email_to_user($user1, $user2, $subject, $messagetext);
+        email_to_user($user2, $user1, $subject2, $messagetext2);
+        $this->assertSame(2, $sink->count());
+        $result = $sink->get_messages();
+        $this->assertCount(2, $result);
+        $sink->close();
+
+        $this->assertSame($subject, $result[0]->subject);
+        $this->assertSame($messagetext, trim($result[0]->body));
+        $this->assertSame($user1->email, $result[0]->to);
+        $this->assertSame($user2->email, $result[0]->from);
+
+        $this->assertSame($subject2, $result[1]->subject);
+        $this->assertSame($messagetext2, trim($result[1]->body));
+        $this->assertSame($user2->email, $result[1]->to);
+        $this->assertSame($user1->email, $result[1]->from);
     }
 }
