@@ -69,9 +69,10 @@ class profile_field_datetime extends profile_field_base {
      * @since Moodle 2.5
      */
     public function edit_save_data_preprocess($datetime, $datarecord) {
-        // If timestamp then explode it to check if year is within field limit.
-        $isstring = strpos($datetime, '-');
-        if (empty($isstring)) {
+        if (!$datetime) {
+            return 0;
+        }
+        if (ctype_digit($datetime)) { // numeric => timestamp
             $datetime = date('Y-m-d-H-i-s', $datetime);
         }
 
