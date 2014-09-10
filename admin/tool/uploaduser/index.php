@@ -338,9 +338,8 @@ if ($formdata = $mform2->is_cancelled()) {
 
                 // Form contains key and later code expects value.
                 // Convert key to value for required profile fields.
-                require_once($CFG->dirroot.'/user/profile/field/'.$proffields[$field]->datatype.'/field.class.php');
                 $profilefieldclass = 'profile_field_'.$proffields[$field]->datatype;
-                $profilefield = new $profilefieldclass($proffields[$field]->id);
+                $profilefield = new $profilefieldclass('user', $proffields[$field]->id);
                 if (method_exists($profilefield, 'convert_external_data')) {
                     $user->$field = $profilefield->edit_save_data_preprocess($user->$field, null);
                 }
