@@ -83,7 +83,7 @@ $DB->delete_records_select('cohort_members', "userid IN (SELECT id FROM {user} W
 $DB->delete_records_select('groups_members', "userid IN (SELECT id FROM {user} WHERE deleted = 1)");
 $DB->delete_records_select('user_enrolments', "userid IN (SELECT id FROM {user} WHERE deleted = 1)");
 $DB->delete_records_select('user_preferences', "userid IN (SELECT id FROM {user} WHERE deleted = 1)");
-$DB->delete_records_select('user_info_data', "userid IN (SELECT id FROM {user} WHERE deleted = 1)");
+$DB->delete_records_select('custom_info_data', "objectname = 'user' AND objectid IN (SELECT id FROM {user} WHERE deleted = 1)");
 $DB->delete_records_select('user_lastaccess', "userid IN (SELECT id FROM {user} WHERE deleted = 1)");
 $DB->delete_records_select('external_tokens', "userid IN (SELECT id FROM {user} WHERE deleted = 1)");
 $DB->delete_records_select('external_services_users', "userid IN (SELECT id FROM {user} WHERE deleted = 1)");

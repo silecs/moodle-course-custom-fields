@@ -530,7 +530,7 @@ abstract class condition_info_base {
             // For user fields
             $sql = "SELECT a.id as cmaid, a.*, uf.*
                       FROM {" . $tableprefix . "_avail_fields} a
-                 LEFT JOIN {user_info_field} uf ON a.customfieldid =  uf.id
+                 LEFT JOIN {custom_info_field} uf ON (uf.objectname = 'user' AND a.customfieldid =  uf.id)
                      WHERE " . $idfield . " = :itemid";
             $conditions = $DB->get_records_sql($sql, array('itemid' => $item->id));
             foreach ($conditions as $condition) {
@@ -641,7 +641,7 @@ abstract class condition_info_base {
         );
 
         // Go through the custom profile fields now
-        if ($user_info_fields = $DB->get_records('user_info_field')) {
+        if ($user_info_fields = $DB->get_records('custom_info_field', array('objectname' => 'user'))) {
             foreach ($user_info_fields as $field) {
                 if ($formatoptions) {
                     $userfields[$field->id] = format_string($field->name, true, $formatoptions);
@@ -691,7 +691,7 @@ abstract class condition_info_base {
         $objavailfield->$idfieldname = $this->item->id;
         if (is_numeric($field)) { // If the condition field is numeric then it is a custom profile field
             // Need to get the field name so we can add it to the cache
-            $ufield = $DB->get_field('user_info_field', 'name', array('id' => $field));
+            $ufield = $DB->get_field('custom_info_field', 'name', array('id' => $field));
             $objavailfield->fieldname = $ufield;
             $objavailfield->customfieldid = $field;
         } else {
@@ -1307,7 +1307,7 @@ abstract class condition_info_base {
             // We'll also preload all of the other custom profile fields just in case and ensure we have the
             // default value available as well.
             if ($this->customprofilefields === null) {
-                $this->customprofilefields = $DB->get_records('user_info_field', null, 'sortorder ASC, id ASC', 'id, shortname, defaultdata');
+                $this->customprofilefields = $DB->get_records('custom_info_field', array('objectname' => 'user'), 'sortorder ASC, id ASC', 'id, shortname, defaultdata');
             }
             if (!array_key_exists($fieldid, $this->customprofilefields)) {
                 // No such field exists.
@@ -1359,7 +1359,7 @@ abstract class condition_info_base {
                 // Fetch the data for the field. Noting we keep this query simple so that Database caching takes care of performance
                 // for us (this will likely be hit again).
                 // We are able to do this because we've already pre-loaded the custom fields.
-                $data = $DB->get_field('user_info_data', 'data', array('userid' => $userid, 'fieldid' => $fieldid), IGNORE_MISSING);
+                $data = $DB->get_field('user_info_data', 'data', array('objectname' => 'user', 'objectid' => $userid, 'fieldid' => $fieldid), IGNORE_MISSING);
                 // If we have data return that, otherwise return the default.
                 if ($data !== false) {
                     return $data;
