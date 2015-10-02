@@ -303,7 +303,7 @@ class course_edit_form extends moodleform {
 
         // Next the customisable fields
         $this->custominfo = new custominfo_form_extension('course');
-        $canviewall = has_capability('moodle/course:update', get_context_instance(CONTEXT_SYSTEM));
+        $canviewall = has_capability('moodle/course:update', context_system::instance());
         $this->custominfo->definition($mform, $canviewall);
 
         $this->add_action_buttons();

@@ -22,6 +22,12 @@
  * @license http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 
+/**
+ * Class profile_define_base
+ *
+ * @copyright  2007 onwards Shane Elliot {@link http://pukunui.com}
+ * @license http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
+ */
 require_once($CFG->libdir . '/custominfo/lib.php');
 
 /**

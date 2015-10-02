@@ -3496,7 +3496,7 @@ function xmldb_main_upgrade($oldversion) {
                     $fieldrecs = $DB->get_records_sql("
                             SELECT cmaf.userfield, cmaf.operator, cmaf.value, uif.shortname
                               FROM {course_modules_avail_fields} cmaf
-                         LEFT JOIN {user_info_field} uif ON uif.id = cmaf.customfieldid
+                         LEFT JOIN {custom_info_field} uif ON uif.id = cmaf.customfieldid
                              WHERE cmaf.coursemoduleid = ?", array($rec->id));
                 } else {
                     $fieldrecs = array();
@@ -3553,7 +3553,7 @@ function xmldb_main_upgrade($oldversion) {
                     $fieldrecs = $DB->get_records_sql("
                             SELECT csaf.userfield, csaf.operator, csaf.value, uif.shortname
                               FROM {course_sections_avail_fields} csaf
-                         LEFT JOIN {user_info_field} uif ON uif.id = csaf.customfieldid
+                         LEFT JOIN {custom_info_field} uif ON uif.id = csaf.customfieldid
                              WHERE csaf.coursesectionid = ?", array($rec->id));
                 } else {
                     $fieldrecs = array();
@@ -3639,27 +3639,27 @@ function xmldb_main_upgrade($oldversion) {
 
     if ($oldversion < 2014041500.01) {
 
-        $table = new xmldb_table('user_info_data');
+        $table = new xmldb_table('custom_info_data');
 
         $sql = 'SELECT DISTINCT info.id
-                  FROM {user_info_data} info
-            INNER JOIN {user_info_data} older
+                  FROM {custom_info_data} info
+            INNER JOIN {custom_info_data} older
                     ON info.fieldid = older.fieldid
-                   AND info.userid = older.userid
+                   AND info.objectid = older.objectid
                    AND older.id < info.id';
         $transaction = $DB->start_delegated_transaction();
         $rs = $DB->get_recordset_sql($sql);
         foreach ($rs as $rec) {
-            $DB->delete_records('user_info_data', array('id' => $rec->id));
+            $DB->delete_records('custom_info_data', array('id' => $rec->id));
         }
         $transaction->allow_commit();
 
-        $oldindex = new xmldb_index('userid_fieldid', XMLDB_INDEX_NOTUNIQUE, array('userid', 'fieldid'));
+        $oldindex = new xmldb_index('objectid_fieldid', XMLDB_INDEX_NOTUNIQUE, array('objectid', 'fieldid'));
         if ($dbman->index_exists($table, $oldindex)) {
             $dbman->drop_index($table, $oldindex);
         }
 
-        $newindex = new xmldb_index('userid_fieldid', XMLDB_INDEX_UNIQUE, array('userid', 'fieldid'));
+        $newindex = new xmldb_index('objectid_fieldid', XMLDB_INDEX_UNIQUE, array('objectid', 'fieldid'));
 
         if (!$dbman->index_exists($table, $newindex)) {
             $dbman->add_index($table, $newindex);

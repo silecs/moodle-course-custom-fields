@@ -39,12 +39,9 @@ $controller = new custominfo_controller('user');
 $controller->set_redirect($CFG->wwwroot.'/user/profile/index.php');
 
 // Do we have any actions to perform before printing the header.
-$controller->dispatch_action($action, $redirect);
+$controller->dispatch_action($action);
 
 $controller->check_category_defined();
-
-// Show all categories.
-$categories = $DB->get_records('custom_info_category', array('objectname' => 'user'), 'sortorder ASC');
 
 // Print the header.
 echo $OUTPUT->header();

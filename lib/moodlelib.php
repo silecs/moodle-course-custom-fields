@@ -4315,11 +4315,13 @@ function delete_user(stdClass $user) {
     // Purge user preferences.
     $DB->delete_records('user_preferences', array('userid' => $user->id));
 
-    // Purge user extra profile info.
-    $DB->delete_records('user_info_data', array('userid' => $user->id));
-
     // purge user custom profile info
     $DB->delete_records('custom_info_data', array('objectname' => 'user', 'objectid' => $user->id));
+
+    // Last course access not necessary either.
+    $DB->delete_records('user_lastaccess', array('userid' => $user->id));
+    // Remove all user tokens.
+    $DB->delete_records('external_tokens', array('userid' => $user->id));
 
     // Unauthorise the user for all services.
     $DB->delete_records('external_services_users', array('userid' => $user->id));

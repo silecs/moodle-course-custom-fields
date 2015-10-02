@@ -25,11 +25,11 @@ class custominfo_field_extension_user implements custominfo_field_extension_i {
                 if ($objectid == $USER->id) {
                     return true;
                 } else {
-                    return has_capability('moodle/user:viewalldetails', get_context_instance(CONTEXT_USER, $objectid));
+                    return has_capability('moodle/user:viewalldetails', context_user::instance($objectid));
                 }
             case CUSTOMINFO_VISIBLE_NONE:
             default:
-                return has_capability($this->capability, get_context_instance(CONTEXT_USER, $objectid));
+                return has_capability($this->capability, context_user::instance($objectid));
         }
     }
 } /// End of class definition

@@ -110,7 +110,7 @@ class profile_define_datetime extends custominfo_define_base {
         }
 
         // Get the field data from the DB.
-        $field = $DB->get_record('user_info_field', array('id' => $id), 'param1, param2', MUST_EXIST);
+        $field = $DB->get_record('custom_info_field', array('objectname' => $this->objectname, 'id' => $id), 'param1, param2', MUST_EXIST);
 
         // Get the current calendar in use - see MDL-18375.
         $calendartype = \core_calendar\type_factory::get_calendar_instance();

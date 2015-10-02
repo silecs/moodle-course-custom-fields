@@ -22,10 +22,10 @@ class custominfo_field_extension_course implements custominfo_field_extension_i 
             case CUSTOMINFO_VISIBLE_ALL:
                 return true;
             case CUSTOMINFO_VISIBLE_PRIVATE:
-                return has_capability('moodle/course:view', get_context_instance(CONTEXT_COURSE, $objectid));
+                return has_capability('moodle/course:view', context_course::instance($objectid));
             case CUSTOMINFO_VISIBLE_NONE:
             default:
-                return has_capability($this->capability, get_context_instance(CONTEXT_COURSE, $objectid));
+                return has_capability($this->capability, context_course::instance($objectid));
         }
     }
 } /// End of class definition
