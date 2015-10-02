@@ -34,7 +34,7 @@ class profilefield extends base {
 
     public function is_uninstall_allowed() {
         global $DB;
-        return !$DB->record_exists('user_info_field', array('datatype'=>$this->name));
+        return !$DB->record_exists('custom_info_field', array('datatype'=>$this->name));
     }
 
     /**

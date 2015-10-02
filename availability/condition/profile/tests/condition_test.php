@@ -53,11 +53,11 @@ class availability_profile_condition_testcase extends advanced_testcase {
         // Add a custom profile field type. The API for doing this is indescribably
         // horrid and tightly intertwined with the form UI, so it's best to add
         // it directly in database.
-        $DB->insert_record('user_info_field', array(
+        $DB->insert_record('custom_info_field', array(
                 'shortname' => 'frogtype', 'name' => 'Type of frog', 'categoryid' => 1,
-                'datatype' => 'text'));
-        $this->profilefield = $DB->get_record('user_info_field',
-                array('shortname' => 'frogtype'));
+                'datatype' => 'text', 'objectname' => 'user'));
+        $this->profilefield = $DB->get_record('custom_info_field',
+                array('shortname' => 'frogtype', 'objectname' => 'user'));
 
         // Clear static cache.
         \availability_profile\condition::wipe_static_cache();
@@ -333,11 +333,11 @@ class availability_profile_condition_testcase extends advanced_testcase {
         $info = new \core_availability\mock_info();
 
         // Add custom textarea type.
-        $DB->insert_record('user_info_field', array(
+        $DB->insert_record('custom_info_field', array(
                 'shortname' => 'longtext', 'name' => 'Long text', 'categoryid' => 1,
-                'datatype' => 'textarea'));
-        $customfield = $DB->get_record('user_info_field',
-                array('shortname' => 'longtext'));
+                'datatype' => 'textarea', 'objectname' => 'user'));
+        $customfield = $DB->get_record('custom_info_field',
+                array('shortname' => 'longtext', 'objectname' => 'user'));
 
         // The list of fields should include the text field added in setUp(),
         // but should not include the textarea field added just now.
@@ -361,15 +361,15 @@ class availability_profile_condition_testcase extends advanced_testcase {
         }
         $alreadyset = array_key_exists($userid, $this->setusers);
         if (is_null($value)) {
-            $DB->delete_records('user_info_data',
-                    array('userid' => $userid, 'fieldid' => $fieldid));
+            $DB->delete_records('custom_info_data',
+                    array('objectid' => $userid, 'fieldid' => $fieldid));
             unset($this->setusers[$userid]);
         } else if ($alreadyset) {
-            $DB->set_field('user_info_data', 'data', $value,
-                    array('userid' => $userid, 'fieldid' => $fieldid));
+            $DB->set_field('custom_info_data', 'data', $value,
+                    array('objectid' => $userid, 'fieldid' => $fieldid));
         } else {
-            $DB->insert_record('user_info_data', array('userid' => $userid,
-                    'fieldid' => $fieldid, 'data' => $value));
+            $DB->insert_record('custom_info_data', array('objectid' => $userid,
+                    'fieldid' => $fieldid, 'data' => $value, 'objectname' => 'user'));
             $this->setusers[$userid] = true;
         }
     }
@@ -465,11 +465,11 @@ class availability_profile_condition_testcase extends advanced_testcase {
         condition::wipe_static_cache();
 
         // For testing, make another info field with default value.
-        $DB->insert_record('user_info_field', array(
+        $DB->insert_record('custom_info_field', array(
                 'shortname' => 'tonguestyle', 'name' => 'Tongue style', 'categoryid' => 1,
-                'datatype' => 'text', 'defaultdata' => 'Slimy'));
-        $otherprofilefield = $DB->get_record('user_info_field',
-                array('shortname' => 'tonguestyle'));
+                'datatype' => 'text', 'defaultdata' => 'Slimy', 'objectname' => 'user'));
+        $otherprofilefield = $DB->get_record('custom_info_field',
+                array('shortname' => 'tonguestyle', 'objectname' => 'user'));
 
         // Make a test course and some users.
         $generator = $this->getDataGenerator();

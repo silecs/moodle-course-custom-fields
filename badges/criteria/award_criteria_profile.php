@@ -55,9 +55,9 @@ class award_criteria_profile extends award_criteria {
                          'aim', 'msn', 'department', 'institution', 'description', 'city', 'url', 'country');
 
         $sql = "SELECT uf.id as fieldid, uf.name as name, ic.id as categoryid, ic.name as categoryname, uf.datatype
-                FROM {user_info_field} uf
-                JOIN {user_info_category} ic
-                ON uf.categoryid = ic.id AND uf.visible <> 0
+                FROM {custom_info_field} uf
+                JOIN {custom_info_category} ic
+                ON uf.categoryid = ic.id AND uf.visible <> 0 AND ic.objectname = 'user'
                 ORDER BY ic.sortorder ASC, uf.sortorder ASC";
 
         // Get custom fields.
@@ -134,7 +134,7 @@ class award_criteria_profile extends award_criteria {
         $output = array();
         foreach ($this->params as $p) {
             if (is_numeric($p['field'])) {
-                $str = $DB->get_field('user_info_field', 'name', array('id' => $p['field']));
+                $str = $DB->get_field('custom_info_field', 'name', array('id' => $p['field']));
             } else {
                 $str = get_user_field_name($p['field']);
             }
@@ -186,7 +186,7 @@ class award_criteria_profile extends award_criteria {
         // Add user custom field parameters if there are any.
         if (!empty($infodata)) {
             $extraon = implode($rule, $infodata);
-            $join = " LEFT JOIN {user_info_data} uid ON uid.userid = u.id AND ({$extraon})";
+            $join = " LEFT JOIN {custom_info_data} uid ON uid.objectid = u.id AND uid.objectname = 'user' AND ({$extraon})";
         }
 
         // Add user table field parameters if there are any.
@@ -228,7 +228,7 @@ class award_criteria_profile extends award_criteria {
         // Add user custom fields if there are any.
         if (!empty($infodata)) {
             $extraon = implode($rule, $infodata);
-            $join = " LEFT JOIN {user_info_data} uid ON uid.userid = u.id AND ({$extraon})";
+            $join = " LEFT JOIN {custom_info_data} uid ON uid.objectid = u.id AND uid.objectname = 'user' AND ({$extraon})";
         }
 
         // Add user table fields if there are any.

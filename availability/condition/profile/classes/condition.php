@@ -423,7 +423,7 @@ class condition extends \core_availability\condition {
                 // Fetch the data for the field. Noting we keep this query simple so that Database caching takes care of performance
                 // for us (this will likely be hit again).
                 // We are able to do this because we've already pre-loaded the custom fields.
-                $data = $DB->get_field('user_info_data', 'data', array('userid' => $userid,
+                $data = $DB->get_field('custom_info_data', 'data', array('objectid' => $userid,
                         'fieldid' => self::$customprofilefields[$field]->id), IGNORE_MISSING);
                 // If we have data return that, otherwise return the default.
                 if ($data !== false) {
@@ -466,7 +466,7 @@ class condition extends \core_availability\condition {
             $customfield = $customfields[$this->customfield];
 
             // Fetch custom field value for all users.
-            $values = $DB->get_records_select('user_info_data', 'fieldid = ? AND userid ' . $sql,
+            $values = $DB->get_records_select('custom_info_data', 'fieldid = ? AND objectid ' . $sql,
                     array_merge(array($customfield->id), $params),
                     '', 'userid, data');
             $valuefield = 'data';
@@ -581,9 +581,9 @@ class condition extends \core_availability\condition {
             $customfield = $customfields[$this->customfield];
 
             $mainparams = array();
-            $tablesql = "LEFT JOIN {user_info_data} ud ON ud.fieldid = " .
+            $tablesql = "LEFT JOIN {custom_info_data} ud ON ud.fieldid = " .
                     self::unique_sql_parameter($mainparams, $customfield->id) .
-                    " AND ud.userid = userids.id";
+                    " AND ud.objectid = userids.id";
             list ($condition, $conditionparams) = $this->get_condition_sql('ud.data', null, true);
             $mainparams = array_merge($mainparams, $conditionparams);
 

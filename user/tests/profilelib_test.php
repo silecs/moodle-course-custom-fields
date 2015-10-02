@@ -46,9 +46,9 @@ class core_user_profilelib_testcase extends advanced_testcase {
         $user = $this->getDataGenerator()->create_user();
 
         // Add a custom field of textarea type.
-        $id1 = $DB->insert_record('user_info_field', array(
+        $id1 = $DB->insert_record('custom_info_field', array(
                 'shortname' => 'frogdesc', 'name' => 'Description of frog', 'categoryid' => 1,
-                'datatype' => 'textarea'));
+                'datatype' => 'textarea', 'objectname' => 'user'));
 
         // Check the field is returned.
         $result = profile_get_custom_fields();
@@ -63,9 +63,9 @@ class core_user_profilelib_testcase extends advanced_testcase {
         $this->assertObjectNotHasAttribute('frogdesc', profile_user_record($user->id));
 
         // Add another custom field, this time of normal text type.
-        $id2 = $DB->insert_record('user_info_field', array(
+        $id2 = $DB->insert_record('custom_info_field', array(
                 'shortname' => 'frogname', 'name' => 'Name of frog', 'categoryid' => 1,
-                'datatype' => 'text'));
+                'datatype' => 'text', 'objectname' => 'user'));
 
         // Check both are returned using normal option.
         $result = profile_get_custom_fields();

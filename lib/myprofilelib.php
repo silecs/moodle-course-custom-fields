@@ -365,9 +365,9 @@ function core_myprofile_navigation(core_user\output\myprofile\tree $tree, $user,
         $tree->add_node($node);
     }
 
-    if ($categories = $DB->get_records('user_info_category', null, 'sortorder ASC')) {
+    if ($categories = $DB->get_records('custom_info_category', ['objectname' => 'user'], 'sortorder ASC')) {
         foreach ($categories as $category) {
-            if ($fields = $DB->get_records('user_info_field', array('categoryid' => $category->id), 'sortorder ASC')) {
+            if ($fields = $DB->get_records('custom_info_field', array('categoryid' => $category->id), 'sortorder ASC')) {
                 foreach ($fields as $field) {
                     require_once($CFG->dirroot.'/user/profile/field/'.$field->datatype.'/field.class.php');
                     $newfield = 'profile_field_'.$field->datatype;

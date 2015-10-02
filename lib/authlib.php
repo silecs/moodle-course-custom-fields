@@ -592,7 +592,7 @@ class auth_plugin_base {
         }
 
         $this->customfields = array();
-        if ($proffields = $DB->get_records('user_info_field')) {
+        if ($proffields = $DB->get_records('custom_info_field', ['objectname' => 'user'])) {
             foreach ($proffields as $proffield) {
                 $this->customfields[] = 'profile_field_'.$proffield->shortname;
             }

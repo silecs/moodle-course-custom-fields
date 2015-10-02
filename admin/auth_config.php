@@ -121,7 +121,7 @@ function print_auth_lock_options($auth, $user_fields, $helptext, $retrieveopts, 
     }
 
     if (!empty($customfields)) {
-        $customfieldname = $DB->get_records('user_info_field', null, '', 'shortname, name');
+        $customfieldname = $DB->get_records('custom_info_field', ['objectname' => 'user'], '', 'shortname, name');
     }
     foreach ($user_fields as $field) {
         // Define some vars we'll work with.
