@@ -46,8 +46,17 @@ function profile_definition_after_data($mform, $userid) {
 }
 
 function profile_validation($usernew, $files) {
-    $custominfo = new custominfo_form_extension('user');
-    return $custominfo->validation($usernew, $files);
+    global $DB;
+
+    $err = array();
+    $fields = $DB->get_records('custom_info_field', array('objectname' => 'user'));
+    if ($fields) {
+        foreach ($fields as $field) {
+            $formfield = custominfo_field_factory('user', $field->datatype, $field->id, $usernew->id);
+            $err += $formfield->edit_validate_field($usernew, $files);
+        }
+    }
+    return $err;
 }
 
 function profile_save_data($usernew) {
@@ -75,8 +84,7 @@ function profile_signup_fields($mform) {
     $sql = "SELECT f.id as fieldid, c.id as categoryid, c.name as categoryname, f.datatype
                 FROM {custom_info_field} f
                 JOIN {custom_info_category} c
-                ON f.categoryid = c.id
-                WHERE ( c.objectname = 'user' AND f.signup = 1 AND f.visible<>0 )
+                ON f.categoryid = c.id and c.objectname = 'user' AND f.signup = 1 AND uf.visible <> 0
                 ORDER BY c.sortorder ASC, f.sortorder ASC";
     $fields = $DB->get_records_sql($sql);
     if ($fields) {
@@ -120,16 +128,16 @@ function profile_get_custom_fields($onlyinuserobject = false) {
     global $DB, $CFG;
 
     // Get all the fields.
-    $fields = $DB->get_records('user_info_field', null, 'id ASC');
+    $fields = $DB->get_records('custom_info_field', array('objectname' => 'user'), 'id ASC');
 
     // If only doing the user object ones, unset the rest.
     if ($onlyinuserobject) {
         foreach ($fields as $id => $field) {
-            require_once($CFG->dirroot . '/user/profile/field/' .
+            require_once($CFG->dirroot . '/lib/custominfo/field/' .
                     $field->datatype . '/field.class.php');
             $newfield = 'profile_field_' . $field->datatype;
-            $formfield = new $newfield();
-            if (!$formfield->is_user_object_data()) {
+            $formfield = new $newfield('user');
+            if (!$formfield->is_object_data()) {
                 unset($fields[$id]);
             }
         }

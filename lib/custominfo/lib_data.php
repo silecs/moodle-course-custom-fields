@@ -19,7 +19,7 @@ class custominfo_data extends custominfo_data_abstract {
 
     /**
      * Add a property to the object for each field submitted in the form
-     * @global object $DB
+     * @global moodle_database $DB
      * @param object $object
      */
     public function load_data($object) {
@@ -39,7 +39,7 @@ class custominfo_data extends custominfo_data_abstract {
 
     /**
      * Write in the DB the data for each field submitted in the form
-     * @global object $DB
+     * @global moodle_database $DB
      * @param object $newobject
      */
     public function save_data($newobject) {
@@ -57,7 +57,7 @@ class custominfo_data extends custominfo_data_abstract {
     /**
      * Display a list of the visible field names and values.
      * This is currently used by "user" pages with a simple header: <table class="list" summary="">
-     * @global object $DB
+     * @global moodle_database $DB
      * @param integer $objectid
      */
     public function display_fields($objectid, $categories=null) {
@@ -71,11 +71,8 @@ class custominfo_data extends custominfo_data_abstract {
                     foreach ($fields as $field) {
                         $formfield = custominfo_field_factory($this->objectname, $field->datatype, $field->id, $objectid);
                         if ($formfield->is_visible() and !$formfield->is_empty()) {
-                            printf(
-                                    "\n<tr><td class=\"label c0\">%s</td><td class=\"info c1\">%s</td></tr>\n",
-                                    format_string($formfield->field->name.':'),
-                                    $formfield->display_data()
-                            );
+                            echo html_writer::tag('dt', format_string($formfield->field->name), array('class' => 'label c0'));
+                            echo html_writer::tag('dd', $formfield->display_data(), array('class' => 'info c1'));
                         }
                     }
                 }
@@ -85,7 +82,7 @@ class custominfo_data extends custominfo_data_abstract {
 
     /**
      * Returns a structured list (array(array)) of categories, fields names and values
-     * @global object $DB
+     * @global moodle_database $DB
      * @param integer $objectid
      * @param integer $allfields : if set, all fields are returned; otherwise only not empty ones
      */
@@ -113,7 +110,7 @@ class custominfo_data extends custominfo_data_abstract {
 
     /**
      * Returns a structured list (array(array(array))) of categories, fields shortnames, names and values
-     * @global object $DB
+     * @global moodle_database $DB
      * @param integer $objectid
      * @param integer $allfields : if set, all fields are returned; otherwise only not empty ones
      */
@@ -208,7 +205,7 @@ class custominfo_form_extension extends custominfo_data_abstract {
 
     /**
      * Declare the customisable categories and fields on a form
-     * @param object $mform     instance of the moodleform class
+     * @param moodleform $mform
      * @param bool $canviewall  (opt) if true, force the visibility of all fields
      */
     public function definition($mform, $canviewall=false) {
@@ -245,7 +242,7 @@ class custominfo_form_extension extends custominfo_data_abstract {
 
     /**
      *
-     * @global object $DB
+     * @global moodle_database $DB
      * @param object  $mform
      */
     public function definition_after_data($mform) {
@@ -262,7 +259,7 @@ class custominfo_form_extension extends custominfo_data_abstract {
 
     /**
      * Validates the custom fields and return an array of errors
-     * @global object $DB
+     * @global moodle_database $DB
      * @param object $objectnew  Object to validate
      * @param array $files
      * @return array of errors

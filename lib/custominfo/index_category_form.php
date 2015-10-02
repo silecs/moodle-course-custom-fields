@@ -31,6 +31,7 @@ require_once($CFG->dirroot.'/lib/formslib.php');
 
 /**
  * Class category_form
+ * This class declares the form that describes a custominfo category.
  *
  * @copyright  2007 onwards Shane Elliot {@link http://pukunui.com}
  * @license http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
@@ -72,7 +73,7 @@ class category_form extends moodleform {
 
         $data  = (object)$data;
 
-        $duplicate = $DB->record_exists('custom_info_category',
+        $duplicate = $DB->get_field('custom_info_category', 'id',
                 array('objectname' => $this->_customdata['objectname'], 'name' => $data->name));
 
         // Check the name is unique.
@@ -80,7 +81,7 @@ class category_form extends moodleform {
             $olddata = $DB->get_record('custom_info_category',
                     array('objectname' => $this->_customdata['objectname'], 'id' => $data->id));
             // Name has changed, new name in use, new name in use by another record.
-            $dupfound = (($olddata->name !== $data->name) && $duplicate && ($data->id != $duplicate->id));
+            $dupfound = (($olddata->name !== $data->name) && $duplicate && ($data->id != $duplicate));
         } else { // New profile category.
             $dupfound = $duplicate;
         }

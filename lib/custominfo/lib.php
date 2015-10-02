@@ -79,7 +79,7 @@ abstract class custominfo_field_base {
      */
     public function edit_field($mform) {
         if ($this->field->visible != CUSTOMINFO_VISIBLE_NONE
-                or has_capability($this->capability, get_context_instance(CONTEXT_SYSTEM))) {
+                or has_capability($this->capability, context_system::instance())) {
 
             $this->edit_field_add($mform);
             $this->edit_field_set_default($mform);
@@ -96,7 +96,7 @@ abstract class custominfo_field_base {
      */
     public function edit_after_data($mform) {
         if ($this->field->visible != CUSTOMINFO_VISIBLE_NONE
-                or has_capability($this->capability, get_context_instance(CONTEXT_SYSTEM))) {
+                or has_capability($this->capability, context_system::instance())) {
             $this->edit_field_set_locked($mform);
             return true;
         }
@@ -205,7 +205,7 @@ abstract class custominfo_field_base {
      * @param   object $mform  instance of the moodleform class
      */
     public function edit_field_set_required($mform) {
-        if ($this->is_required() and !has_capability($this->capability, get_context_instance(CONTEXT_SYSTEM))) {
+        if ($this->is_required() and !has_capability($this->capability, context_system::instance())) {
             $mform->addRule($this->inputname, get_string('required'), 'required', null, 'client');
         }
     }
@@ -218,7 +218,7 @@ abstract class custominfo_field_base {
         if (!$mform->elementExists($this->inputname)) {
             return;
         }
-        if ($this->is_locked() and !has_capability($this->capability, get_context_instance(CONTEXT_SYSTEM))) {
+        if ($this->is_locked() and !has_capability($this->capability, context_system::instance())) {
             $mform->hardFreeze($this->inputname);
             $mform->setConstant($this->inputname, $this->data);
         }

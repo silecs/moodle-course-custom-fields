@@ -125,7 +125,7 @@ class user_editadvanced_form extends moodleform {
 
         // Next the customisable profile fields.
         $this->custominfo = new custominfo_form_extension('user', $userid);
-        $canviewall = has_capability('moodle/user:update', get_context_instance(CONTEXT_SYSTEM));
+        $canviewall = has_capability('moodle/user:update', context_system::instance());
         $this->custominfo->definition($mform, $canviewall);
 
         if ($userid == -1) {

@@ -223,7 +223,7 @@ class custominfo_category extends custominfo_record {
 
     /**
      * Insert or update a category with the data submitted from a form.
-     * @global object $DB
+     * @global moodle_database $DB
      * @param object $data (opt, null by default)
      * @return integer A constant among self::EDIT_*
      */
@@ -484,7 +484,7 @@ class custominfo_field extends custominfo_record {
      */
     public static function list_datatypes() {
         $datatypes = array();
-        $plugins = get_plugin_list('profilefield');
+        $plugins = core_component::get_plugin_list('profilefield');
         foreach ($plugins as $type => $unused) {
             $datatypes[$type] = get_string('pluginname', 'profilefield_'.$type);
         }

@@ -188,9 +188,9 @@ class graded_users_iterator {
             foreach ($customfieldsarray as $field) {
                 if (!empty($field->customid)) {
                     $customfieldssql .= "
-                            LEFT JOIN (SELECT * FROM {custominfo_data}
+                            LEFT JOIN (SELECT * FROM {custom_info_data}
                                 WHERE objectname = 'user' AND fieldid = :cf$customfieldscount) cf$customfieldscount
-                            ON u.id = cf$customfieldscount.userid";
+                            ON u.id = cf$customfieldscount.objectid";
                     $userfields .= ", cf$customfieldscount.data AS customfield_{$field->shortname}";
                     $params['cf'.$customfieldscount] = $field->customid;
                     $customfieldscount++;
@@ -3153,7 +3153,7 @@ abstract class grade_helper {
             $customfields = $DB->get_records_sql("SELECT f.*
                                                     FROM {custom_info_field} f
                                                     JOIN {custom_info_category} c ON f.categoryid=c.id
-                                                    WHERE f.objectname = 'user' AND f.shortname $wherefields
+                                                    WHERE c.objectname = 'user' AND f.shortname $wherefields
                                                     ORDER BY c.sortorder ASC, f.sortorder ASC", $whereparams);
             if (!is_array($customfields)) {
                 continue;
