@@ -360,24 +360,6 @@ if (!empty($forum)) {      // User is starting a new discussion in a forum
                     $discussionurl = new moodle_url("/mod/forum/discuss.php", array('d' => $discussion->id));
                 }
 
-                $params = array(
-                    'context' => $modcontext,
-                    'objectid' => $post->id,
-                    'other' => array(
-                        'discussionid' => $discussion->id,
-                        'forumid' => $forum->id,
-                        'forumtype' => $forum->type,
-                    )
-                );
-
-                if ($post->userid !== $USER->id) {
-                    $params['relateduserid'] = $post->userid;
-                }
-                $event = \mod_forum\event\post_deleted::create($params);
-                $event->add_record_snapshot('forum_posts', $post);
-                $event->add_record_snapshot('forum_discussions', $discussion);
-                $event->trigger();
-
                 redirect(forum_go_back_to($discussionurl));
             } else {
                 print_error('errorwhiledelete', 'forum');
@@ -858,7 +840,7 @@ if ($mform_post->is_cancelled()) {
         // Before we add this we must check that the user will not exceed the blocking threshold.
         forum_check_blocking_threshold($thresholdwarning);
 
-        if (isset($fromform->groupinfo)) {
+        if (!empty($fromform->groupinfo)) {
             // Use the value provided in the dropdown group selection.
             $fromform->groupid = $fromform->groupinfo;
 
