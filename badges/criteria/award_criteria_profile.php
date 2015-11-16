@@ -55,9 +55,9 @@ class award_criteria_profile extends award_criteria {
                          'aim', 'msn', 'department', 'institution', 'description', 'city', 'url', 'country');
 
         $sql = "SELECT uf.id as fieldid, uf.name as name, ic.id as categoryid, ic.name as categoryname, uf.datatype
-                FROM {user_info_field} uf
-                JOIN {user_info_category} ic
-                ON uf.categoryid = ic.id AND uf.visible <> 0
+                FROM {custom_info_field} uf
+                JOIN {custom_info_category} ic
+                //ON uf.categoryid = ic.id AND uf.visible <> 0 AND uf.objectname = 'user'
                 ORDER BY ic.sortorder ASC, uf.sortorder ASC";
 
         // Get custom fields.
@@ -134,7 +134,7 @@ class award_criteria_profile extends award_criteria {
         $output = array();
         foreach ($this->params as $p) {
             if (is_numeric($p['field'])) {
-                $str = $DB->get_field('user_info_field', 'name', array('id' => $p['field']));
+                $str = $DB->get_field('custom_info_field', 'name', array('objectname' => 'user', 'id' => $p['field']));
             } else {
                 $str = get_user_field_name($p['field']);
             }
@@ -178,7 +178,7 @@ class award_criteria_profile extends award_criteria {
             if (is_numeric($param['field'])) {
                 // This is a custom field.
                 $idx = count($whereparts) + 1;
-                $join .= " LEFT JOIN {user_info_data} uid{$idx} ON uid{$idx}.userid = u.id AND uid{$idx}.fieldid = :fieldid{$idx} ";
+                $join .= " LEFT JOIN {custom_info_data} uid{$idx} ON uid{$idx}.userid = u.id AND uid{$idx}.fieldid = :fieldid{$idx} ";
                 $sqlparams["fieldid{$idx}"] = $param['field'];
                 $whereparts[] = "uid{$idx}.id IS NOT NULL";
             } else {
@@ -218,7 +218,7 @@ class award_criteria_profile extends award_criteria {
             if (is_numeric($param['field'])) {
                 // This is a custom field.
                 $idx = count($whereparts);
-                $join .= " LEFT JOIN {user_info_data} uid{$idx} ON uid{$idx}.userid = u.id AND uid{$idx}.fieldid = :fieldid{$idx} ";
+                $join .= " LEFT JOIN {custom_info_data} uid{$idx} ON uid{$idx}.userid = u.id AND uid{$idx}.fieldid = :fieldid{$idx} ";
                 $params["fieldid{$idx}"] = $param['field'];
                 $whereparts[] = "uid{$idx}.id IS NOT NULL";
             } else {

@@ -388,7 +388,8 @@ class core_badges_badgeslib_testcase extends advanced_testcase {
         require_once($CFG->dirroot.'/user/profile/lib.php');
 
         // Add a custom field of textarea type.
-        $customprofileid = $DB->insert_record('user_info_field', array(
+        $customprofileid = $DB->insert_record('custom_info_field', array(
+            'objectname' => 'user',
             'shortname' => 'newfield', 'name' => 'Description of new field', 'categoryid' => 1,
             'datatype' => 'textarea'));
 
